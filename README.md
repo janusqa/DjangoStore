@@ -11,10 +11,14 @@
 - source venv/bin/activate
 - pip install -U pip setuptools wheel
 - python3 -m pip install Django
+- pip freeze > requirements.txt # save project dependancies
+- pip install -r requirements.txt # restore project dependancies
 
 ### Projects
-- django-admin startproject <[myproject]>
+- django-admin startproject <[myproject]> 
 - cd <[myproject]>
+- OR 
+- django-admin startproject <[myproject]> .  # to create the project right in your current folder instead of a project sub-folder
 - python manage.py runserver 8000 #8000 is the default port
 
 ### Scaffold a site
@@ -23,6 +27,29 @@
 - back up one folder create a templates folder in same dir as manage.py to hold your html templates
 - go down one directory again to settings.py. Find "TEMPLATES" array, and in the "DIRS" array spcify your templates directory as "templates:
 - now open the views.py to connect up our templates
+
+### STATIC FILES
+- configure static and media in settings.py
+    ```
+    MEDIA_URL = "media/"
+    MEDIA_ROOT = BASE_DIR / "media"
+    STATIC_URL = "static/"
+    STATICFILES_DIRS = [BASE_DIR / "static"]
+    STATIC_ROOT = BASE_DIR / "assets"
+    ```
+- make sure you create a static folder and media folder in project root
+- staic folder holds items like css/js etc
+- configure the urls for these also in urls.py
+    ```
+    from django.urls import path, include, re_path
+    from django.conf.urls.static import static
+    from django.conf import settings
+    from django.views.static import serve
+    re_path(r"^media/(?P<path>.*)$", serve, {"document_root": settings.MEDIA_ROOT}),
+re_path(r"^static/(?P<path>.*)$", serve, {"document_root": settings.STATIC_ROOT}),
+    ```
+- now run the command "$ python manage.py collectstatic"
+
   
 ### CSS
 - opening settings and in the top "import os"
@@ -35,6 +62,7 @@
 - next as in c# we have to add our "classlib" aka app to the "solution" aka project. open settings.py in main project folder, scroll to "INSTALLED_APPS", and add the foldername for your app to the existing list of apps there.
 - Each app can have its own templates/<[app_name]> folder to host templates specific to it
 - Now create a urls.py inside the posts app dir that will be used to link up the templates for this app and make them accessible via views.py
+- !!!IMPORTANT!!!! when seting your routs in the path params in urls.py ALWAYS USE A TRAILING SLASH!!!! eg. path("new-post/", views.new_post, name="new-post") AND NOT path("new-post", views.say_hello, name="hello"),
 - Will need to connect this back up in the urls.py of the main project. It's somewhat like node js router/controller patter
 
 ### DB Migrations
