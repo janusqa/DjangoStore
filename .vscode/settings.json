@@ -1,0 +1,20 @@
+{
+    "[python]": {
+        "editor.formatOnSave": true,
+        "editor.defaultFormatter": "ms-python.black-formatter"
+    },
+    "emmet.includeLanguages": {
+        "django-html": "html"
+    },
+    "files.associations": {
+        "**/*.html": "html",
+        "**/templates/**/*.html": "django-html",
+        "**/templates/**/*": "django-txt",
+        "**/requirements{/**/*}.(txt,in}": "pip-requirements"
+    },
+    "[django-html]": {
+        "editor.defaultFormatter": "ms-python.black-formatter"
+    },
+    "terminal.integrated.fontFamily": "'JetBrains Mono'",
+    "terminal.integrated.gpuAcceleration": "off"
+}
