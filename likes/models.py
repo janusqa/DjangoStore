@@ -1,16 +1,12 @@
 from django.db import models
 from django.contrib.contenttypes.models import ContentType
 from django.contrib.contenttypes.fields import GenericForeignKey
+from django.contrib.auth.models import User
 
 
 # Create your models here.
-class Tag(models.Model):
-    label = models.CharField(max_length=255)
-
-
-# What tag is applied to what object
-class TaggedItem(models.Model):
-    tag = models.ForeignKey(Tag, on_delete=models.CASCADE)
+class LikedItem(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
     # Use generic relationship to make this loosley coupled, and it can
     # be used to tagged any type of object. This is done via "ContentTypes"
     # we need:
