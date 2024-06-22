@@ -10,15 +10,15 @@
 {% endif %}
 
 
-{% comment %} {% if objects|length > 0 %}
+{% if objects|length > 0 %}
     <ul>
     {% for object in objects %}
-        <li>{{ object.id }} - {{ object.placed_at}} - {{ object.customer.first_name }}</li>
+        <li>{{ object.title }} </li>
     {% endfor %}
     </ul>
 {% else %}
     <p>No products found.</p>
-{% endif %} {% endcomment %}
+{% endif %} 
 
  {% comment %} {{ result }} {% endcomment %}
 

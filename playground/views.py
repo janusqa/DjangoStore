@@ -8,7 +8,10 @@ from django.db.models.aggregates import Count, Max, Min, Avg
 from django.db.models import Q, F, Value, Func, ExpressionWrapper
 from django.db.models.functions import Concat
 from django.db.models import DecimalField
-from store.models import Product, OrderItem, Order, Customer
+from django.db import transaction, connection
+from django.contrib.contenttypes.models import ContentType
+from store.models import Collection, Product, OrderItem, Order, Customer
+from tags.models import Tag, TaggedItem
 
 
 # Create your views here.
@@ -67,6 +70,13 @@ def say_hello(request):
     query_set = Product.objects.all()[:5]  # get first 5 objects.
     query_set = Product.objects.all()[5:10]  # get next 5 objects.
 
+    # for product in query_set:
+    #     print(product)
+
+    return render(request, "playground/hello.html", {"products": list(query_set)})
+
+
+def say_hello1(request):
     # select only certain fields in query_set
     query_set = Product.objects.values("id", "title", "collection__title")
 
@@ -80,14 +90,6 @@ def say_hello(request):
     # "only" is different from "values" becuase "values" return a dictionary of
     # objects while with "only" we get actual instances of the object returned
     query_set = Product.objects.only("id", "title")
-
-    # for product in query_set:
-    #     print(product)
-
-    return render(request, "playground/hello.html", {"products": list(query_set)})
-
-
-def say_hello1(request):
     # !!!NOTE!!! values do not exhibit the same issues as "only" and "defer"
 
     # deferring fields using "only". This is different from using "values"
@@ -112,6 +114,9 @@ def say_hello1(request):
 
 
 def say_hello2(request):
+    # Filling related fields for an object using
+    # 1. "select_related"
+    # 2. "prefetch_related"
 
     # !!!NOTE!!! in template we are displaying prduct title, product.collection.id
     # Using query belwo we will run int to inefficient query handling again like
@@ -215,14 +220,131 @@ def say_hello2(request):
     # should use "order"
     customers = list(Customer.objects.annotate(num_orders=Count("order")))
 
-    return render(request, "playground/hello.html", {"result": result})
-
-
-def say_hello3(request):
     # ExpressionWrappers
     discounted_price = ExpressionWrapper(
         F("unit_price") * 0.8, output_field=DecimalField()
     )
     query_set = Product.objects.annotate(discounted_price=discounted_price)
 
-    return render(request, "playground/hello.html", {"products": list(query_set)})
+    return render(request, "playground/hello.html", {"result": result})
+
+
+def say_hello3(request):
+
+    # querying by generic types (tags, likes)
+    # 1. find contenttype_id of the object we are interested in
+    # 2. use that in conjuction with the object_id to find what we are interested in
+
+    # returns row in content_type table that represents the object, in this case Product
+    contenty_type = ContentType.objects.get_for_model(Product)
+
+    query_set = TaggedItem.objects.select_related("tag").filter(
+        content_type=contenty_type,
+        object_id=1,
+    )
+
+    # Custom Query Manager to encapsulate the above code to make querying easier
+    query_set = TaggedItem.objects.get_tags_for(Product, 5)
+
+    return render(request, "playground/hello.html", {"objects": list(query_set)})
+
+
+def say_hello4(request):
+    # Creating an object and saving it to the db
+    collection = Collection()
+    collection.title = "Video Games"
+
+    # 2 ways to set a related/foreign key field
+    collection.featured_product = Product(pk=1)
+    collection.featured_product__id = 1
+
+    # Above we set fields individually, but we can create the object using it's
+    # constructor
+    collection = Collection(title="Video Games", featured_product=Product(pk=1))
+
+    # save to db
+    collection.save()
+    print(collection.id)
+
+    return render(request, "playground/hello.html", {"name": "JanusQA"})
+
+
+def say_hello5(request):
+    # Updating an object and saving it to the db
+    collection = Collection.objects.filter(pk=11).first()
+
+    if collection is not None:
+        collection.title = "Games"
+        collection.featured_product = None
+        collection.save()
+
+    # Updating just some fields in an object and saving it to the db
+    collection = Collection.objects.filter(pk=11).first()
+    if collection is not None:
+        collection.featured_product = None
+        collection.save()
+
+    # Deleting objects
+
+    # Deleting a single object
+    collection = Collection.objects.filter(pk=11).first()
+    if collection is not None:
+        collection.delete()
+
+    query_set = Collection.objects.filter(pk__gt=11)
+    if query_set is not None:
+        query_set.delete()
+
+    return render(request, "playground/hello.html", {"name": "JanusQA"})
+
+
+def say_hello6(request):
+    # Transactions
+
+    with transaction.atomic():
+        order = Order()
+        order.customer = Customer(pk=1)
+        order.save()
+
+        item = OrderItem()
+        item.order = order
+        item.product = Product(pk=1)
+        item.quantity = 1
+        item.unit_price = 10
+        item.save()
+
+    return render(request, "playground/hello.html", {"name": "JanusQA"})
+
+
+def say_hello7(request):
+    # Raw SQL
+
+    query_set = Product.objects.raw("SELECT * FROM store_product")
+
+    # other fields are deferred so be careful accessing them
+    query_set = Product.objects.raw("SELECT id, title FROM store_product")
+
+    # by pass using the model
+    with connection.cursor() as cursor:
+        cursor.execute("SELECT title FROM store_product")
+
+    with connection.cursor() as cursor:
+        cursor.execute(
+            """
+            SELECT 
+                title 
+            FROM 
+                store_product
+            WHERE
+                id = %s 
+            AND 
+                unit_price < %s
+        """,
+            [1, 10],
+        )
+
+    return render(
+        request,
+        "playground/hello.html",
+        {"name": "JanusQA", "objects": list(query_set)},
+    )
