@@ -5,8 +5,9 @@ from django.db.models.aggregates import Count, Max, Min, Avg
 
 # @required when you want to use OR in your queries,
 # F required when you want to compare db fields against each other
-from django.db.models import Q, F, Value, Func
+from django.db.models import Q, F, Value, Func, ExpressionWrapper
 from django.db.models.functions import Concat
+from django.db.models import DecimalField
 from store.models import Product, OrderItem, Order, Customer
 
 
@@ -169,7 +170,12 @@ def say_hello2(request):
     # Annotations
     # Add additional information to an object while querying it
     # must use an Expression object based on the Expression class
-    # some Expression objects are Value, F, Func, Aggregate
+    # some Expression objects are
+    # 1. Value : for represting boolean, numbers and strings,
+    # 3. F : for referencing fields,
+    # 3. Func : for calling database functions,
+    # 4. Aggregate : base class for all aggregate classes like SUM etc
+    # 5. ExpressionWrapper: for building complex expressions
 
     # add dynamically generated is_new boolean field to customer objects returned by query
     customers = list(Customer.objects.annotate(is_new=Value(True)))
@@ -210,3 +216,13 @@ def say_hello2(request):
     customers = list(Customer.objects.annotate(num_orders=Count("order")))
 
     return render(request, "playground/hello.html", {"result": result})
+
+
+def say_hello3(request):
+    # ExpressionWrappers
+    discounted_price = ExpressionWrapper(
+        F("unit_price") * 0.8, output_field=DecimalField()
+    )
+    query_set = Product.objects.annotate(discounted_price=discounted_price)
+
+    return render(request, "playground/hello.html", {"products": list(query_set)})
