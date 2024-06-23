@@ -1,4 +1,5 @@
 from django.db import models
+from django.core.validators import MinValueValidator
 
 
 # Create your models here.
@@ -72,7 +73,15 @@ class Product(models.Model):
     title = models.CharField(max_length=255)
     slug = models.SlugField()
     description = models.TextField()
-    unit_price = models.DecimalField(max_digits=6, decimal_places=2)
+    unit_price = models.DecimalField(
+        max_digits=6,
+        decimal_places=2,
+        validators=[
+            MinValueValidator(
+                1, message="Ensure this value is greater than or equal to 1."
+            )
+        ],
+    )
     inventory = models.IntegerField()
     last_update = models.DateTimeField(auto_now=True)
     collection = models.ForeignKey(Collection, on_delete=models.PROTECT)

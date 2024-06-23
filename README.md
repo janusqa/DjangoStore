@@ -105,6 +105,7 @@ re_path(r"^static/(?P<path>.*)$", serve, {"document_root": settings.STATIC_ROOT}
 - Can configure filter for columns. Custome filters included for custom columns you added. See ProductAdmin.
 - Add custom actions. Every list comes with a free DELETE action. See ProductAdmin.
 - Can customize the forms objects in the admin. As an example we will auto-fill the slug field of the product object when we enter a title
+- Enable data valadation. See Product Mode -> unit_prices where we validate that unit price must be in a certain range of values, that is -1 or 0 is not allowed as a price
 
 ### IMAGES via Admin
 - add MEDIA_URL and MEDIA_ROOT to settings.py in main project folder
