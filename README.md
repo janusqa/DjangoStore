@@ -106,6 +106,8 @@ re_path(r"^static/(?P<path>.*)$", serve, {"document_root": settings.STATIC_ROOT}
 - Add custom actions. Every list comes with a free DELETE action. See ProductAdmin.
 - Can customize the forms objects in the admin. As an example we will auto-fill the slug field of the product object when we enter a title
 - Enable data valadation. See Product Mode -> unit_prices where we validate that unit price must be in a certain range of values, that is -1 or 0 is not allowed as a price
+- Enable parent page to display its related child items. Example on the order form page, display an editable list of order items. This is powerfull.  See "OrderItemInline" and "OrderAdmin" -> "inlines" in admin.py
+- Add a generic relationship to a form. Example allow tags to be addes while on the add product form. See ProductAdmin. In this example we introduced tight coupling between the store app and the tags app. BAD!!! We fix this by creating a mdeiator app called store_custom which knows about both the store and the tags app. This store_custom will only be used in this project there by keeping tags and store app dependant of each other using store_custom as the shim to unite them when needed. We orginally had TagInline class in store we now move in to admin.py in store_custom. Do not forget to register this new app in settings.py. Now if we remove store_custom from settings.py and view add product form page we see the page without the CustomProductAdmin which configures the tag items to be shown as children, and if we add it back then that taggedItem section reappears. Nifty.
 
 ### IMAGES via Admin
 - add MEDIA_URL and MEDIA_ROOT to settings.py in main project folder
