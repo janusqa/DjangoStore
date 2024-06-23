@@ -120,3 +120,7 @@ re_path(r"^static/(?P<path>.*)$", serve, {"document_root": settings.STATIC_ROOT}
 - Set DEBUG to False when deploying
 - populate ALLOWED_HOSTS with the hosts that can access your django
 - run "$ python manage.py collectstatic". This is useful for deployment scenarios. It pull all your static content together and places it in the specified "assets" folder
+
+### Django REST Api
+- pip install djangorestframework
+- add to apps in settings.py of main project "rest_framework"
