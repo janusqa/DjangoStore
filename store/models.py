@@ -22,6 +22,9 @@ class Customer(models.Model):
         max_length=1, choices=MEMBERSHIP_CHOICES, default=MEMBERSHIP_BRONZE
     )
 
+    def __str__(self) -> str:
+        return f"{self.last_name}, {self.first_name}"
+
 
 class Address(models.Model):
     street = models.CharField(max_length=255)
@@ -32,10 +35,16 @@ class Address(models.Model):
     # ) # one-to-one relationship
     customer = models.ForeignKey(Customer, on_delete=models.CASCADE)  # one-to-many
 
+    def __str__(self) -> str:
+        return f"{self.street} | {self.city} | {self.zip} ({self.customer.email})"
+
 
 class Promotion(models.Model):
     description = models.CharField(max_length=255)
     discount = models.FloatField()
+
+    def __str__(self) -> str:
+        return f"{self.description}"
 
 
 # 1. Name clashes: use related_name='+' to tell django we want to buy pass creating the reverse
@@ -52,6 +61,12 @@ class Collection(models.Model):
         "Product", on_delete=models.SET_NULL, null=True, related_name="+"
     )
 
+    def __str__(self) -> str:
+        return f"{self.title}"
+
+    class Meta:
+        ordering = ["title"]
+
 
 class Product(models.Model):
     title = models.CharField(max_length=255)
@@ -63,15 +78,27 @@ class Product(models.Model):
     collection = models.ForeignKey(Collection, on_delete=models.PROTECT)
     promotions = models.ManyToManyField(Promotion)
 
+    def __str__(self) -> str:
+        return f"{self.title}"
+
+    class Meta:
+        ordering = ["title"]
+
 
 class Cart(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self) -> str:
+        return f"Cart: {self.pk}"
 
 
 class CartItem(models.Model):
     cart = models.ForeignKey(Cart, on_delete=models.CASCADE)
     product = models.ForeignKey(Product, on_delete=models.CASCADE)
     quantity = models.PositiveSmallIntegerField()
+
+    def __str__(self) -> str:
+        return f"Cart:{self.cart.pk} -> {self.pk}"
 
 
 class Order(models.Model):
@@ -91,9 +118,15 @@ class Order(models.Model):
     )
     placed_at = models.DateTimeField(auto_now_add=True)
 
+    def __str__(self) -> str:
+        return f"Order:{self.pk}, Customer: {self.customer.email}"
+
 
 class OrderItem(models.Model):
     order = models.ForeignKey(Order, on_delete=models.PROTECT)
     product = models.ForeignKey(Product, on_delete=models.PROTECT)
     quantity = models.PositiveSmallIntegerField()
     unit_price = models.DecimalField(max_digits=6, decimal_places=2)
+
+    def __str__(self) -> str:
+        return f"Cart:{self.order.pk} -> {self.pk}"

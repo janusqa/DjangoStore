@@ -14,6 +14,12 @@
 - pip freeze > requirements.txt # save project dependancies
 - pip install -r requirements.txt # restore project dependancies
 
+### Django debug toolbar
+- https://django-debug-toolbar.readthedocs.io/en/latest/installation.html 
+- $ pip install django-debug-toolbar Now
+-  add it to INSTALLED_APPS in settings.py in primary folder 
+-  add a url pattern to urls.py in primary folder path('debug/', include(debug_toolbar.urls))
+
 ### Projects
 - django-admin startproject <[myproject]> 
 - cd <[myproject]>
@@ -74,8 +80,17 @@ re_path(r"^static/(?P<path>.*)$", serve, {"document_root": settings.STATIC_ROOT}
 
 ### Django Admin
 - python manage.py createsuperuser # create credentials to access Django Administration
+- python manage.py changepassword <[username]> # reset a password for existing user 
 - Access admin via localhost:8000/admin and login with your freshly minted credentials
 - We get Groups and Users for free.  To Add aditional models, need to set them up in admin.py which is in for example the root of an app folder
+- Customize Admin Site title by setting "admin.site.site_header" in main project "urls.py"
+- Customize Admin index page title by setting "admin.site.index_title" in main project "urls.py"
+- Remember to overrid the __str__ method of models so when they are displayed in the Admin UI they look friendly and human readable
+- You can also customize how objects are displayed by providing a nested Meta class to for example sort objects when they appear in the admin UI
+- You can also display how the list is displayed, for example add additional columns. See "admin.py" in store for an example with ProductAdmin class used to  customize Product listing. Basically create a class and pass this class while registering model in admin
+- Computed columns are supported. See Inventory Status example with ProductAdmin
+- Can add related fields to the listing. See ProductAdmin example. We can also show a particular field of the related object. It's in the example implemented by using a method called collection_title
+- Can override base query using "get_queryset". See CollectionAdmin
 
 ### IMAGES via Admin
 - add MEDIA_URL and MEDIA_ROOT to settings.py in main project folder

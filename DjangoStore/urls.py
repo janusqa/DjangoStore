@@ -22,6 +22,9 @@ from django.conf import settings
 from django.views.static import serve
 import debug_toolbar
 
+admin.site.site_header = "DjangoStore Admin"
+admin.site.index_title = "Admin"
+
 urlpatterns = [
     path("__debug__/", include(debug_toolbar.urls)),
     re_path(r"^media/(?P<path>.*)$", serve, {"document_root": settings.MEDIA_ROOT}),
