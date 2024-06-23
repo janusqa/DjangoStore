@@ -74,6 +74,15 @@ re_path(r"^static/(?P<path>.*)$", serve, {"document_root": settings.STATIC_ROOT}
 ### DB Migrations
 - python manage.py makemigrations # scaffold any changes to Models into a migration. Similar to "dotnet ef migrations add" command in c#
 - python manage.py migrate # Apply any changes in scaffoled migrations. Simlar to "dotnet ef database update" command in c#
+- revert a migration by migrating to a previous migration eg. "python manage.py migrate store 0003"
+
+### custom migrations
+- create empty migration $ python manage.py makemigrations store --empty
+- in the newly created migrations file in the operations array eg. 
+- operations = [ 
+    migrations.RunSQL( """ INSERT INTO store_collection (title) VALUES ("collection1") """, """ DELETE FROM store_collection WHERE title="collection1" """ ) 
+  ] 
+  NOTE: the second arg to RunSQL is a sql statment that reverts the first statement. We need it so we can use migrations to revert. The first arg migrates forwards to the new state of the db, the second arg migrates backward to the past state of the db
 
 ### Python/Django shell
 - python manage.py shell # start a python/django shell
@@ -91,6 +100,7 @@ re_path(r"^static/(?P<path>.*)$", serve, {"document_root": settings.STATIC_ROOT}
 - Computed columns are supported. See Inventory Status example with ProductAdmin
 - Can add related fields to the listing. See ProductAdmin example. We can also show a particular field of the related object. It's in the example implemented by using a method called collection_title
 - Can override base query using "get_queryset". See CollectionAdmin
+- Add links to related objects/fields in a list. See CollectionAdmin
 
 ### IMAGES via Admin
 - add MEDIA_URL and MEDIA_ROOT to settings.py in main project folder

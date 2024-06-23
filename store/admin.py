@@ -3,6 +3,9 @@ from django.contrib import admin
 from django.db.models.query import QuerySet
 from django.http import HttpRequest
 from django.db.models.aggregates import Count
+from django.utils.html import format_html  # implement links for list in admin ui
+from django.utils.http import urlencode  # implement links for list in admin ui
+from django.urls import reverse  # implement links for list in admin ui
 from . import models
 
 
@@ -58,7 +61,16 @@ class CollectionAdmin(admin.ModelAdmin):
 
     @admin.display(ordering="products_count")
     def products_count(self, collection):
-        return collection.products_count
+        # return collection.products_count
+        #!!!NOTE!!! how to link a related column to its list page
+        # get the link to the related admin list we use "reverse"
+        # reverse('admin:ourAppName_targetModel_targetPage')
+        url_string = reverse("admin:store_product_changelist")
+        # filter the related list via a querystring
+        query_string = urlencode({"collection__id": collection.id})
+        # combine both into final url and return the resultant formatted url
+        url = f"{url_string}?{query_string}"  # page is called "changelist"
+        return format_html(f"<a href='{url}'>{collection.products_count}</a>")
 
     def get_queryset(self, request: HttpRequest) -> QuerySet[Any]:
         return super().get_queryset(request).annotate(products_count=Count("product"))
