@@ -101,6 +101,10 @@ re_path(r"^static/(?P<path>.*)$", serve, {"document_root": settings.STATIC_ROOT}
 - Can add related fields to the listing. See ProductAdmin example. We can also show a particular field of the related object. It's in the example implemented by using a method called collection_title
 - Can override base query using "get_queryset". See CollectionAdmin
 - Add links to related objects/fields in a list. See CollectionAdmin
+- Can specify what columns to search by in a list. See CustomerAdmin
+- Can configure filter for columns. Custome filters included for custom columns you added. See ProductAdmin.
+- Add custom actions. Every list comes with a free DELETE action. See ProductAdmin.
+- Can customize the forms objects in the admin. As an example we will auto-fill the slug field of the product object when we enter a title
 
 ### IMAGES via Admin
 - add MEDIA_URL and MEDIA_ROOT to settings.py in main project folder

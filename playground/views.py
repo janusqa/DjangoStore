@@ -37,6 +37,7 @@ def say_hello(request):
         collection__id__range=(1, 3)
     )  # span over attributes of foreign key
 
+    # use a lookup type eg. "contains". Other lookup types are "startswith" etc
     query_set = Product.objects.filter(title__contains="coffee")
 
     query_set = Product.objects.filter(last_update__year=2021)  # extract parts of data
