@@ -124,3 +124,8 @@ re_path(r"^static/(?P<path>.*)$", serve, {"document_root": settings.STATIC_ROOT}
 ### Django REST Api
 - pip install djangorestframework
 - add to apps in settings.py of main project "rest_framework"
+- additionaly in settings customize the framework via "REST_FRAMEWORK" variable
+  - by default the framework retuns numbers as strings. We can disable this via customizing the framework. See an example in settings.py
+- views.py contain our controllers
+- urls.py contain our enpoints
+- Create serializers (aka DTOs) for any model we want to return from the api.
