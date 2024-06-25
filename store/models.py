@@ -140,4 +140,14 @@ class OrderItem(models.Model):
     unit_price = models.DecimalField(max_digits=6, decimal_places=2)
 
     def __str__(self) -> str:
-        return f"Cart:{self.order.pk} -> {self.pk}"
+        return f"Order:{self.order.pk} -> {self.pk}"
+
+
+class Review(models.Model):
+    product = models.ForeignKey(Product, on_delete=models.CASCADE)
+    name = models.CharField(max_length=255)
+    description = models.TextField()
+    date = models.DateField(auto_now_add=True)
+
+    def __str__(self) -> str:
+        return f"Review:{self.pk} -> Product: {self.product.title}"

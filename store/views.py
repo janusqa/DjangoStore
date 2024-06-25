@@ -7,8 +7,12 @@ from rest_framework.viewsets import ModelViewSet
 from rest_framework.generics import ListCreateAPIView, RetrieveUpdateDestroyAPIView
 from rest_framework.response import Response
 from rest_framework import status
-from .models import OrderItem, Product, Collection
-from .serializers import CollectionModelSerializer, ProductModelSerializer
+from .models import OrderItem, Product, Collection, Review
+from .serializers import (
+    CollectionModelSerializer,
+    ProductModelSerializer,
+    ReviewModelSerializer,
+)
 
 
 # Create your views here.
@@ -60,6 +64,22 @@ class CollectionViewSet(ModelViewSet):
             )
 
         return super().destroy(request, *args, **kwargs)
+
+
+class ReviewViewSet(ModelViewSet):
+    def get_queryset(self):
+        # recall that self.kwargs contains the route params
+        return Review.objects.select_related("product").filter(
+            product__pk=self.kwargs["product_pk"]
+        )
+
+    def get_serializer_class(self):
+        return ReviewModelSerializer
+
+    def get_serializer_context(self):
+        # Access route parameters via kwargs, get the product id from it and pass it to the serializer via context
+        # recall we use a context to pass additional data to a serializer
+        return {"request": self.request, "product_pk": self.kwargs["product_pk"]}
 
 
 ###

@@ -126,6 +126,12 @@ re_path(r"^static/(?P<path>.*)$", serve, {"document_root": settings.STATIC_ROOT}
 - add to apps in settings.py of main project "rest_framework"
 - additionaly in settings customize the framework via "REST_FRAMEWORK" variable
   - by default the framework retuns numbers as strings. We can disable this via customizing the framework. See an example in settings.py
+- pip install drf-nested-routers # to get nested route funtionality like https://localhost/products/1/reviews/1
 - views.py contain our controllers
 - urls.py contain our enpoints
 - Create serializers (aka DTOs) for any model we want to return from the api.
+- Order of creating a api segment
+  - Create the model
+  - Create the Serializer
+  - Create the View/ViewClass/ViewSet
+  - Create the router/nested router

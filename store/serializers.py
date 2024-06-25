@@ -1,6 +1,6 @@
 from decimal import Decimal
 from rest_framework import serializers
-from store.models import Product, Collection
+from store.models import Product, Collection, Review
 
 
 # !!!NOTE!!! There is a more efficent way of serializing a model. That is to use
@@ -67,6 +67,24 @@ class ProductModelSerializer(serializers.ModelSerializer):
     #     instance.unit_price = validated_data.get("unit_price")
     #     instance.save()
     #     return instance
+
+
+class ReviewModelSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Review
+        fields = [
+            "pk",
+            "date",
+            "name",
+            "description",
+            # "product", # No need to this as this will be present as a route parameter in url. This can be read in the ViewSet and passed in the context
+            # recall we use a context to pass additional data to a serializer
+        ]
+
+    # overwrite the create method for this serializer so set the product_id read from route
+    def create(self, validated_data):
+        product_pk = self.context["product_pk"]
+        return Review.objects.create(product_id=product_pk, **validated_data)
 
 
 ###
