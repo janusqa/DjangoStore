@@ -1,5 +1,7 @@
 from django.shortcuts import render, get_object_or_404
 from django.http import HttpResponse
+from django_filters.rest_framework import DjangoFilterBackend  # add generic filtering
+from rest_framework.filters import SearchFilter  # add searching
 from django.db.models.aggregates import Count
 from rest_framework.decorators import api_view
 from rest_framework.views import APIView
@@ -13,6 +15,7 @@ from .serializers import (
     ProductModelSerializer,
     ReviewModelSerializer,
 )
+from .filters import ProductFilterSet
 
 
 # Create your views here.
@@ -21,8 +24,33 @@ from .serializers import (
 ### Genercic ViewSets
 # Note that for scenarios where our ViewSet should only List or retrive a single object we have "ReadOnlyModelViewSet"
 class ProductViewSet(ModelViewSet):
+    # add generic filtering, no need to manually set up filtering for each param we want to filter by
+    ## for more info https://django-filter.readthedocs.io/en/stable
+    ## We will do a more complex filter on unit_price where we want to filter by a range
+    ## 1. create filters.py in store app
+    ## 2. set up Filterset classes derived from FilterSet, and define your filtering there
+    ## 3. replace filterset_fields with filterset_class
+
+    # add searching by adding SearchFilter to filter_backends, and set up search_fields=[] to the fields we want to search by
+
+    filter_backends = [DjangoFilterBackend, SearchFilter]
+    filterset_class = ProductFilterSet
+    # filterset_fields = ["collection_id"]
+    search_fields = ["title", "description", "collection__title"]
+
     def get_queryset(self):
         return Product.objects.select_related("collection").all()
+
+        ## !!!NOTE!!! Old way of maunally setting up filtering we now use generic filtering above
+        # query_set = Product.objects.select_related("collection").all()
+        ## apply a filter by collection if we have a collection_id query param in the query string
+        ## we can read query params via self.request.query_params just like we can read route params via self.kwargs
+        ## !!!NOTE!!! we have to use .get method as collection_id may not exist in query_params and we do not want to
+        ## throw and uneccesary error. If it does not exist the .get method will return None
+        # collection_id = self.request.query_params.get("collection_id")
+        # if collection_id is not None:
+        #     query_set = query_set.filter(collection__pk=collection_id)
+        # return query_set
 
     def get_serializer_class(self):
         return ProductModelSerializer

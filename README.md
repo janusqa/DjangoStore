@@ -135,3 +135,6 @@ re_path(r"^static/(?P<path>.*)$", serve, {"document_root": settings.STATIC_ROOT}
   - Create the Serializer
   - Create the View/ViewClass/ViewSet
   - Create the router/nested router
+- Filtering. To cut down on writing code to filter in api use django-filter
+  - pip install django-filter
+  - add to list of installed apps in settings.py of main project as "django_filters"
