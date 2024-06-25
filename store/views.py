@@ -1,17 +1,19 @@
 from django.shortcuts import render, get_object_or_404
 from django.http import HttpResponse
+from django.db.models.aggregates import Count
 from django_filters.rest_framework import DjangoFilterBackend  # add generic filtering
 from rest_framework.filters import (
     SearchFilter,
     OrderingFilter,
 )  # add searching, ordering
-from django.db.models.aggregates import Count
 from rest_framework.decorators import api_view
 from rest_framework.views import APIView
 from rest_framework.viewsets import ModelViewSet
 from rest_framework.generics import ListCreateAPIView, RetrieveUpdateDestroyAPIView
 from rest_framework.response import Response
 from rest_framework import status
+
+from .pagination import DefaultPagePagination, DefaultOffsetPagination
 from .models import OrderItem, Product, Collection, Review
 from .serializers import (
     CollectionModelSerializer,
@@ -42,6 +44,10 @@ class ProductViewSet(ModelViewSet):
     # filterset_fields = ["collection_id"]
     search_fields = ["title", "description", "collection__title"]
     ordering_fields = ["unit_price", "last_update", "collection__pk"]
+
+    # add pagination (this is page pagination, we can also have limit and offset pagination, see pagination.py)
+    ## 1. create pagination.py in store app and set up Pagination classes as needed that you can cusomize. They will be derived from PageNumberPagination
+    pagination_class = DefaultPagePagination
 
     def get_queryset(self):
         return Product.objects.select_related("collection").all()
