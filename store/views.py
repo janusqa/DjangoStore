@@ -1,7 +1,10 @@
 from django.shortcuts import render, get_object_or_404
 from django.http import HttpResponse
 from django_filters.rest_framework import DjangoFilterBackend  # add generic filtering
-from rest_framework.filters import SearchFilter  # add searching
+from rest_framework.filters import (
+    SearchFilter,
+    OrderingFilter,
+)  # add searching, ordering
 from django.db.models.aggregates import Count
 from rest_framework.decorators import api_view
 from rest_framework.views import APIView
@@ -32,11 +35,13 @@ class ProductViewSet(ModelViewSet):
     ## 3. replace filterset_fields with filterset_class
 
     # add searching by adding SearchFilter to filter_backends, and set up search_fields=[] to the fields we want to search by
+    # add ordering by adding OrderingFilter to filter_backends, and set up ordering_fields=[] to the fields we want to search by
 
-    filter_backends = [DjangoFilterBackend, SearchFilter]
+    filter_backends = [DjangoFilterBackend, SearchFilter, OrderingFilter]
     filterset_class = ProductFilterSet
     # filterset_fields = ["collection_id"]
     search_fields = ["title", "description", "collection__title"]
+    ordering_fields = ["unit_price", "last_update", "collection__pk"]
 
     def get_queryset(self):
         return Product.objects.select_related("collection").all()

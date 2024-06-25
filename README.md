@@ -140,3 +140,4 @@ re_path(r"^static/(?P<path>.*)$", serve, {"document_root": settings.STATIC_ROOT}
   - add to list of installed apps in settings.py of main project as "django_filters"
   - eg. see filters.py, views.py
 - Searching. see views.py.  need to import SearchFilter from rest_framework.filters
+- Sorting. see views.py. need to import OrderingFilter from rest_framework.filters
