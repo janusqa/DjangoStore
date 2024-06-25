@@ -3,6 +3,78 @@ from rest_framework import serializers
 from store.models import Product, Collection
 
 
+# !!!NOTE!!! There is a more efficent way of serializing a model. That is to use
+# Model serializers
+
+
+class CollectionModelSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Collection
+        fields = ["pk", "title", "product_count"]
+
+    # when creating an object set fields that should not be part of the object as read_only=True
+    product_count = serializers.IntegerField(read_only=True)
+
+
+class ProductModelSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Product
+        fields = [
+            "pk",
+            "title",
+            "description",
+            "slug",
+            "inventory",
+            "unit_price",
+            "price_with_tax",
+            "collection",
+            "collection_str",
+            "collection_object",
+            "collection_str",
+            "collection_link",
+        ]
+
+    # when creating an object set fields that should not be part of the object as read_only=True
+    price_with_tax = serializers.SerializerMethodField(
+        method_name="calculate_tax", read_only=True
+    )
+    # by default the collection included above in meta class gives us by primary key
+    collection_str = serializers.StringRelatedField(source="collection", read_only=True)
+    collection_object = CollectionModelSerializer(
+        source="collection",
+        read_only=True,
+    )
+    collection_link = serializers.HyperlinkedRelatedField(
+        source="collection",
+        queryset=Collection.objects.all(),
+        view_name="store:collections-detail",
+    )
+
+    def calculate_tax(self, product: Product) -> Decimal:
+        return product.unit_price * Decimal(1.1)
+
+    # customize how a product is created
+    # def create(self, validated_data):
+    #     product = Product(**validated_data)
+    #     # add some new field to product object
+    #     product.other = 1
+    #     product.save()
+    #     return product
+
+    # customize how a product is created
+    # instance is a product object
+    # def update(self, instance: Product, validated_data):
+    #     instance.unit_price = validated_data.get("unit_price")
+    #     instance.save()
+    #     return instance
+
+
+###
+### !!!NOTE!!! Every thing below this line is a build up to the model serializers above which replace them
+###
+### Serializers
+
+
 class CollectionSerializer(serializers.Serializer):
     id = serializers.IntegerField()
     title = serializers.CharField(max_length=255)
@@ -38,67 +110,3 @@ class ProductSerializer(serializers.Serializer):
 
     def calculate_tax(self, product: Product) -> Decimal:
         return product.unit_price * Decimal(1.1)
-
-
-# !!!NOTE!!! There is a more efficent way of serializing a model. That is to use
-# Model serializers
-
-
-class CollectionModelSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Collection
-        fields = ["pk", "title"]
-
-
-class ProductModelSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Product
-        fields = [
-            "pk",
-            "title",
-            "description",
-            "slug",
-            "inventory",
-            "unit_price",
-            "price_with_tax",
-            "collection",
-            "collection_str",
-            "collection_object",
-            "collection_str",
-            "collection_link",
-        ]
-
-    price_with_tax = serializers.SerializerMethodField(method_name="calculate_tax")
-    # by default the collection included above in meta class gives us by primary key
-    collection_str = serializers.StringRelatedField(
-        source="collection",
-        required=False,
-    )
-    collection_object = CollectionModelSerializer(
-        source="collection",
-        required=False,
-    )
-    collection_link = serializers.HyperlinkedRelatedField(
-        source="collection",
-        queryset=Collection.objects.all(),
-        view_name="store:collection_detail",
-        required=False,
-    )
-
-    def calculate_tax(self, product: Product) -> Decimal:
-        return product.unit_price * Decimal(1.1)
-
-    # customize how a product is created
-    # def create(self, validated_data):
-    #     product = Product(**validated_data)
-    #     # add some new field to product object
-    #     product.other = 1
-    #     product.save()
-    #     return product
-
-    # customize how a product is created
-    # instance is a product object
-    # def update(self, instance: Product, validated_data):
-    #     instance.unit_price = validated_data.get("unit_price")
-    #     instance.save()
-    #     return instance
