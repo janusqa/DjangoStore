@@ -8,17 +8,26 @@ from rest_framework.filters import (
 )  # add searching, ordering
 from rest_framework.decorators import api_view
 from rest_framework.views import APIView
-from rest_framework.viewsets import ModelViewSet
+from rest_framework.mixins import (
+    CreateModelMixin,
+    RetrieveModelMixin,
+    DestroyModelMixin,
+)
+from rest_framework.viewsets import ModelViewSet, GenericViewSet
 from rest_framework.generics import ListCreateAPIView, RetrieveUpdateDestroyAPIView
 from rest_framework.response import Response
 from rest_framework import status
 
 from .pagination import DefaultPagePagination, DefaultOffsetPagination
-from .models import OrderItem, Product, Collection, Review
+from .models import Cart, CartItem, OrderItem, Product, Collection, Review
 from .serializers import (
+    AddCartItemModelSerializer,
+    CartItemModelSerializer,
+    CartModelSerializer,
     CollectionModelSerializer,
     ProductModelSerializer,
     ReviewModelSerializer,
+    UpdateCartItemModelSerializer,
 )
 from .filters import ProductFilterSet
 
@@ -119,6 +128,50 @@ class ReviewViewSet(ModelViewSet):
         # Access route parameters via kwargs, get the product id from it and pass it to the serializer via context
         # recall we use a context to pass additional data to a serializer
         return {"request": self.request, "product_pk": self.kwargs["product_pk"]}
+
+
+# !!!NOTE!!! We do not need update or list operations, only create, retrieve and delete. So we need to customized this ViewSet
+# we only inherit from the classes we need that ModelViewSet itself inherits from
+class CartViewSet(
+    CreateModelMixin, RetrieveModelMixin, DestroyModelMixin, GenericViewSet
+):
+    def get_queryset(self):
+        # "cartitem_set". What this does is preload each cartitem using "cartitem_set",
+        # and for each item preload its related product with "__product". This is new knowledge
+        return Cart.objects.prefetch_related("cartitem_set__product").annotate(
+            item_count=Count("cartitem")
+        )
+
+    def get_serializer_class(self):
+        return CartModelSerializer
+
+    def get_serializer_context(self):
+        return {"request": self.request}
+
+
+class CartItemViewSet(ModelViewSet):
+    # constrain the methods that this ViewSet will service
+    #!!!NOTE!!! the array value of methods is CASE-SENSITIVE. MUST BE LOWERCASE
+    http_method_names = ["get", "post", "patch", "delete"]
+
+    def get_queryset(self):
+        # recall that self.kwargs contains the route params
+        return CartItem.objects.select_related("product").filter(
+            cart__pk=self.kwargs["cart_pk"]
+        )
+
+    # customize this to return a serializer based on method
+    def get_serializer_class(self):
+        if self.request.method == "POST":
+            return AddCartItemModelSerializer
+        elif self.request.method == "PATCH":
+            return UpdateCartItemModelSerializer
+        return CartItemModelSerializer
+
+    def get_serializer_context(self):
+        # Access route parameters via kwargs, get the product id from it and pass it to the serializer via context
+        # recall we use a context to pass additional data to a serializer
+        return {"request": self.request, "cart_pk": self.kwargs["cart_pk"]}
 
 
 ###

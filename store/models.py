@@ -1,5 +1,7 @@
+from decimal import Decimal
 from django.db import models
 from django.core.validators import MinValueValidator
+from django.db.models import UniqueConstraint
 from uuid import uuid4
 
 
@@ -79,7 +81,7 @@ class Product(models.Model):
         decimal_places=2,
         validators=[
             MinValueValidator(
-                1, message="Ensure this value is greater than or equal to 1."
+                Decimal(1), message="Ensure this value is greater than or equal to 1."
             )
         ],
     )
@@ -108,7 +110,14 @@ class Cart(models.Model):
 class CartItem(models.Model):
     cart = models.ForeignKey(Cart, on_delete=models.CASCADE)
     product = models.ForeignKey(Product, on_delete=models.CASCADE)
-    quantity = models.PositiveSmallIntegerField()
+    quantity = models.PositiveSmallIntegerField(validators=[MinValueValidator(1)])
+
+    class Meta:
+        # set a unique constraint such that comaination of cart + product is a unique key in across cartitem table
+        # i.e a specific cart can only contain a product once.
+        constraints = [
+            UniqueConstraint(fields=["cart", "product"], name="unique_cart_product")
+        ]
 
     def __str__(self) -> str:
         return f"Cart:{self.cart.pk} -> {self.pk}"

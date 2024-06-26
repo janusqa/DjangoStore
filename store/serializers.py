@@ -1,6 +1,6 @@
 from decimal import Decimal
 from rest_framework import serializers
-from store.models import Product, Collection, Review
+from .models import Cart, CartItem, Product, Collection, Review
 
 
 # !!!NOTE!!! There is a more efficent way of serializing a model. That is to use
@@ -36,7 +36,7 @@ class ProductModelSerializer(serializers.ModelSerializer):
 
     # when creating an object set fields that should not be part of the object as read_only=True
     price_with_tax = serializers.SerializerMethodField(
-        method_name="calculate_tax", read_only=True
+        method_name="get_price_with_tax", read_only=True
     )
     # by default the collection included above in meta class gives us by primary key
     collection_str = serializers.StringRelatedField(source="collection", read_only=True)
@@ -50,7 +50,7 @@ class ProductModelSerializer(serializers.ModelSerializer):
         view_name="store:collections-detail",
     )
 
-    def calculate_tax(self, product: Product) -> Decimal:
+    def get_price_with_tax(self, product: Product) -> Decimal:
         return product.unit_price * Decimal(1.1)
 
     # customize how a product is created
@@ -85,6 +85,99 @@ class ReviewModelSerializer(serializers.ModelSerializer):
     def create(self, validated_data):
         product_pk = self.context["product_pk"]
         return Review.objects.create(product_id=product_pk, **validated_data)
+
+
+class SimpleProductModelSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Product
+        fields = ["pk", "title", "unit_price"]
+
+
+class AddCartItemModelSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = CartItem
+        fields = ["pk", "product_id", "quantity"]
+
+    # note that product_id above is an auto generated at run time so we cannot reference it unless we define it in the serailizer
+    product_id = serializers.IntegerField()
+
+    def save(self, **kwargs):
+        # We need to override the save method to meet our business requirements which are if a
+        # product already exsit in the cart we cannot add it again, instead upsert what is there/
+        # recall that in our serializer data is validated and if valid is put in validated_data.
+        # in the save method this variable is accessible via self
+        product_pk = self.validated_data.get("product_id")
+        quantity = self.validated_data.get("quantity")
+        cart_pk = self.context["cart_pk"]
+
+        # we need to follow the same cermony as BaseModelSerializer with is parent of ModelSerailzer
+        # when overring  its methods. That means we have to set self.instance to our upated or created cart item
+        # same as in the save method of the BaseSerializer to ensure all the plumbing is similar. The take away is
+        # that you really need to look at the methods you are overriding and try to mimick what they do
+        cart_item = CartItem.objects.filter(
+            cart__pk=cart_pk, product__pk=product_pk
+        ).first()
+        if cart_item is not None:
+            cart_item.quantity += quantity
+            cart_item.save()
+            self.instance = cart_item
+        else:
+            self.instance = CartItem.objects.create(
+                cart_id=cart_pk, **self.validated_data
+            )
+
+        return self.instance
+
+    # We need to validate the product_id in the save method to prevent us saving a nonexistant product
+    # which will throw an exception
+    # !!!NOTE!!! this function is specially named so that it is used automatially by django
+    def validate_product_id(self, value):
+        if not Product.objects.filter(pk=value).exists():
+            raise serializers.ValidationError("No product with the given ID was found.")
+        return value
+
+
+class UpdateCartItemModelSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = CartItem
+        # note pk is missing because this will be for updates only
+        fields = ["quantity"]
+
+
+class CartItemModelSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = CartItem
+        fields = ["pk", "product", "quantity", "total_price"]
+
+    product = SimpleProductModelSerializer()
+    total_price = serializers.SerializerMethodField("get_total_price")
+
+    def get_total_price(self, cart_item: CartItem) -> Decimal:
+        return Decimal(cart_item.quantity) * cart_item.product.unit_price
+
+
+class CartModelSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Cart
+        fields = ["pk", "item_count", "items", "total_price"]
+
+    # in this case when creating a cart we do not want to send the id
+    pk = serializers.UUIDField(read_only=True)
+    items = CartItemModelSerializer(
+        source="cartitem_set",
+        read_only=True,
+        many=True,
+    )
+    item_count = serializers.IntegerField(read_only=True)
+    total_price = serializers.SerializerMethodField("get_total_price")
+
+    def get_total_price(self, cart: Cart) -> Decimal:
+        return sum(
+            [
+                Decimal(item.quantity) * item.product.unit_price
+                for item in cart.cartitem_set.all()
+            ]
+        )
 
 
 ###
