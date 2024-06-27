@@ -156,3 +156,15 @@ re_path(r"^static/(?P<path>.*)$", serve, {"document_root": settings.STATIC_ROOT}
   - so... for example in our likes app we are using the default User model which we need to change
   - so... in models.py of apps app import settings and now we can access our user model via "settings.AUTH_USER_MODEL". That is anywhere we have old User we can replace it with importing settings and then accessing our user model via "settings.AUTH_USER_MODEL"
   - Django creates permissons based on our models that we can assing them to groups we make. Sometimes we may need a permission that may not quite fit the ones django created so we can create them on the model ourselves. Eg. we can create a permission to cancel our order. See store.models.py and review the Meta class in the order model. It consist of permissons = ["xxx", 'yyy"] where xxx is the permission code we use in our app and yyy is a friendly description. Remember to run migrations afer creating permissions
+
+### Auth endpoints
+- we can certainly roll our own auth from sratch but why do that when they are existing projects that already do this. One such project is dojser which provides ready built rest implementation of all the auth endpoints we could need, and we can customize where neccessary
+- djoser.readthedocs.io/en/latest/getting_started.html to view what endpoints are made available to us
+- Getting started
+  - pip install djoser
+  - add djoser as an app in settings.py
+  - pip install djangorestframework_simplejwt  # this is a package that supposrts JWT
+    - set this up in settings.py in REST_FRAMEWORK variable
+    - set up SIMPLE_JWT in settings.py
+  - in urls.py in main app register djoser url patterns 
+  - check it out. http://localhost:8000/auth/users/ , will get a 401 as we need now to pass tokens to be authorized
