@@ -107,7 +107,7 @@ re_path(r"^static/(?P<path>.*)$", serve, {"document_root": settings.STATIC_ROOT}
 - Can customize the forms objects in the admin. As an example we will auto-fill the slug field of the product object when we enter a title
 - Enable data valadation. See Product Mode -> unit_prices where we validate that unit price must be in a certain range of values, that is -1 or 0 is not allowed as a price
 - Enable parent page to display its related child items. Example on the order form page, display an editable list of order items. This is powerfull.  See "OrderItemInline" and "OrderAdmin" -> "inlines" in admin.py
-- Add a generic relationship to a form. Example allow tags to be addes while on the add product form. See ProductAdmin. In this example we introduced tight coupling between the store app and the tags app. BAD!!! We fix this by creating a mdeiator app called store_custom which knows about both the store and the tags app. This store_custom will only be used in this project there by keeping tags and store app dependant of each other using store_custom as the shim to unite them when needed. We orginally had TagInline class in store we now move in to admin.py in store_custom. Do not forget to register this new app in settings.py. Now if we remove store_custom from settings.py and view add product form page we see the page without the CustomProductAdmin which configures the tag items to be shown as children, and if we add it back then that taggedItem section reappears. Nifty.
+- Add a generic relationship to a form. Example allow tags to be addes while on the add product form. See ProductAdmin. In this example we introduced tight coupling between the store app and the tags app. BAD!!! We fix this by creating a mdeiator app called "core" which knows about both the store and the tags app. This "core" will only be used in this project there by keeping tags and store app dependant of each other using "core"  as the shim to unite them when needed. We orginally had TagInline class in store we now move in to admin.py in "core". Do not forget to register this new app in settings.py. Now if we remove "core"  from settings.py and view add product form page we see the page without the CustomProductAdmin which configures the tag items to be shown as children, and if we add it back then that taggedItem section reappears. Nifty.
 
 ### IMAGES via Admin
 - add MEDIA_URL and MEDIA_ROOT to settings.py in main project folder
@@ -142,3 +142,17 @@ re_path(r"^static/(?P<path>.*)$", serve, {"document_root": settings.STATIC_ROOT}
 - Searching. see ProductViewSet views.py.  need to import SearchFilter from rest_framework.filters
 - Sorting. see ProductViewSet views.py. need to import OrderingFilter from rest_framework.filters
 - Pagination. see pagination.py, views.py need to import PageNumberPagination from rest_framework.pagination
+
+### Auth
+- in our custom core app which is specifi to this app and used for defining specific behaviours for this app we can extend the User model.  See models.py in core app
+- Now tell Django we need to use our our extended User model via AUTH_USER_MODEL in main app setting.py.
+- DONT FORGET TO RUN MIGRATIONS TO take account of our new extended model
+  - This will give us an error about our very first migration being dependant on the defalut User we want to swapout
+  - This is because we have done it in the middle of the project (usually you should do this as part of your project set up but here we are). Create the class even if you have to use "pass" to leave it empty.
+  - The only fix is to drop the database and recreate it from scratch. SO REMEMBER TO AVOID THIS JUST DO IT AS ONE OF THE FIRST THINGS WHEN CONFIRUING YOUR APPS and save yourself the pain.
+  - Now note that Users will not be present in Admin Console since we changed it. We need to go to admin.py in core app and register it like we did our CustomProductAdmin
+  - Customize CustomUserAdmin in this case to ask for email during registration in the admin interface. See admin.py in core app
+- now go thru entire app where you imported the default user model and make changes that will swap out the default User for our User model. We have to be careful here not to make any app dependant on core where our User model is
+  - so... for example in our likes app we are using the default User model which we need to change
+  - so... in models.py of apps app import settings and now we can access our user model via "settings.AUTH_USER_MODEL". That is anywhere we have old User we can replace it with importing settings and then accessing our user model via "settings.AUTH_USER_MODEL"
+  - Django creates permissons based on our models that we can assing them to groups we make. Sometimes we may need a permission that may not quite fit the ones django created so we can create them on the model ourselves. Eg. we can create a permission to cancel our order. See store.models.py and review the Meta class in the order model. It consist of permissons = ["xxx", 'yyy"] where xxx is the permission code we use in our app and yyy is a friendly description. Remember to run migrations afer creating permissions

@@ -1,12 +1,12 @@
 from django.db import models
 from django.contrib.contenttypes.models import ContentType
 from django.contrib.contenttypes.fields import GenericForeignKey
-from django.contrib.auth.models import User
+from django.conf import settings
 
 
 # Create your models here.
 class LikedItem(models.Model):
-    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
     # Use generic relationship to make this loosley coupled, and it can
     # be used to tagged any type of object. This is done via "ContentTypes"
     # we need:

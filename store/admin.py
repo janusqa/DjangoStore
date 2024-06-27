@@ -28,14 +28,14 @@ class InventoryFilter(admin.SimpleListFilter):
 
 # the relation between product and tag is a generic one so we use
 # a differt tabularinline called "GenericTabularInline"
-# introduced tight coupling with taggs app. Moved to store_custom app
+# introduced tight coupling with taggs app. Moved to "core" app
 # class TagInline(GenericTabularInline):
 #     model = TaggedItem
 #     autocomplete_fields = ["tag"]
 
 
 class ProductAdmin(admin.ModelAdmin):
-    # inlines = ["TagInline"] # introduced tight coupling with taggs app. Moved to store_custom app
+    # inlines = ["TagInline"] # introduced tight coupling with taggs app. Moved to "core" app
     search_fields = ["title"]
     actions = ["clear_inventory"]
     ## BEGIN FORM MODIFICATION EXAMPLES
@@ -94,21 +94,32 @@ class ProductAdmin(admin.ModelAdmin):
 
 
 class CustomerAdmin(admin.ModelAdmin):
-    list_display = ["first_name", "last_name", "membership", "orders_count"]
+    list_select_related = [
+        "user"
+    ]  # prefecth user information to avoid too many queries being sent
+    list_display = ["get_first_name", "get_last_name", "membership", "get_orders_count"]
     list_editable = ["membership"]
-    ordering = ["first_name", "last_name"]
+    # ordering = ["user__first_name", "user__last_name"]
     list_per_page = 10
     # search_fields = ["first_name", "last_name"]
     # embelllish search fields with lookup type "startwith"
-    search_fields = ["first_name__startswith", "last_name__startswith"]
+    search_fields = ["user__first_name__startswith", "user__last_name__startswith"]
 
-    @admin.display(ordering="orders_count")
-    def orders_count(self, customer):
+    @admin.display(ordering="orders_count", description="orders_count")
+    def get_orders_count(self, customer):
         url_string = reverse("admin:store_order_changelist")
         query_string = urlencode({"customer__pk": customer.pk})
         return format_html(
             f"<a href='{url_string}?{query_string}'>{customer.orders_count}</a>"
         )
+
+    @admin.display(ordering="user__first_name", description="first_name")
+    def get_first_name(self, customer):
+        return customer.user.first_name
+
+    @admin.display(ordering="user__last_name", description="last_name")
+    def get_last_name(self, customer):
+        return customer.user.last_name
 
     def get_queryset(self, request: HttpRequest) -> QuerySet[Any]:
         return super().get_queryset(request).annotate(orders_count=Count("order"))
