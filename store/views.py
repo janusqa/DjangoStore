@@ -19,10 +19,20 @@ from rest_framework.generics import ListCreateAPIView, RetrieveUpdateDestroyAPIV
 from rest_framework.response import Response
 from rest_framework import status
 from rest_framework.decorators import action
-from rest_framework.permissions import IsAuthenticated, AllowAny, IsAdminUser
+from rest_framework.permissions import (
+    IsAuthenticated,
+    AllowAny,
+    IsAdminUser,
+    DjangoModelPermissions,
+    DjangoModelPermissionsOrAnonReadOnly,
+)
 from rest_framework import permissions
 
-from .permissions import IsAdminOrReadOnly
+from .permissions import (
+    IsAdminOrReadOnly,
+    StrictDjangoModelPermissions,
+    ViewCustomerHistoryPermission,
+)
 
 from .pagination import DefaultPagePagination
 from .models import Cart, CartItem, Customer, OrderItem, Product, Collection, Review
@@ -227,11 +237,29 @@ class CustomerViewSet(ModelViewSet):
             # !!!NOTE!!! returning a list of permission objects eg "AllowAny()"" with parens,
             # unlike "permission_classes" where we just specify the class
             return [IsAuthenticated()]
-        return [IsAdminUser()]
+        elif self.action == "history":
+            return [IsAuthenticated(), ViewCustomerHistoryPermission()]
+        # instead of IsAdminUser we can use DjangoModelPermission which allows a user once he has proper model permission
+        # ie those assgined him directly or via a group, then he can still CRUD without having to be an Admin (is_staff) user.
+        # that way we dont have to give out access to the admin UI if we do not want to, but still allow managment via the api
+        # !!!NOTE!!! we also want them not to be able to list and retrieve i.e view if these permission are taken away.
+        # by default enpoint protected with "DjangoModelPermissions" still allow view even if user does not have model permisson
+        # assigned via group or direct. So we use an customized "DjangoModelPermissions" we created in permissions.py to further
+        # indicate that to even view you must have the view permission. We called it "StrictDjangoModelPermissions"
+        # We also have "DjangoModelPermissionsOrAnonReadOnly" which allows unauthenticated users to list or retireve
+        # return [StrictDjangoModelPermissions()]
+        # return [DjangoModelPermissionsOrAnonReadOnly()]
+        return [
+            IsAdminUser()
+        ]  # we only want Admin users we just looked at DjangoModelPermissions to be aware of it
+
+    # detail set to true as this should only work against a specific customer. Listing customers NOT ALLOWED for this action
+    @action(detail=True, methods=["GET"])
+    def history(self, request, pk):
+        return Response("ok")
 
     # detail=False means this action is accessible from list view i.e. localhost:8000/store/customer/me
     # detail=True means this action is accessible from detail view i.e. localhost:8000/store/customer/1/me
-
     # @action(detail=False, methods=["GET", "PUT"], permission_classes=[IsAuthenticated])  # can also overrid permission per action
     @action(detail=False, methods=["GET", "PUT"])
     def me(self, request):

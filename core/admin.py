@@ -1,6 +1,7 @@
 from django.contrib import admin
 from django.contrib.contenttypes.admin import GenericTabularInline
 from django.contrib.auth.admin import UserAdmin
+from django.contrib.auth.models import Permission
 from store.admin import ProductAdmin
 from store.models import Product
 from tags.models import TaggedItem
@@ -45,3 +46,4 @@ class CustomProductAdmin(ProductAdmin):
 admin.site.register(AppUser, UserCustomAdmin)
 admin.site.unregister(Product)
 admin.site.register(Product, CustomProductAdmin)
+admin.site.register(Permission)
