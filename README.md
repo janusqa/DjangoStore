@@ -176,3 +176,8 @@ re_path(r"^static/(?P<path>.*)$", serve, {"document_root": settings.STATIC_ROOT}
   - custom actions beyond create, update, save, destroy etc.
     - we want to create a custom action called me which can be accessed by current logged in user to fetch his profile / customer info
       - this is possible by creating a custom method on the CustomerViewSet and decorating it as an action. "action" is imported from rest_framework.decorators
+
+### Auth permissions on endpoints
+- the default rest_framework permission is AllowAny but we can change this via REST_FRAMEWORK key DEFAULT_PERMISSION_CLASSES in settings.py to for example IsAuthenticated. Now all our enpoints required a logged in user aka a valid jwt token to access them or they will get a 401.
+- We can also leave the default permission in place and apply permissions we need to specific views. See CustomerViewSet permission_classes
+- lets say we want our products endpoint to be able to be listed by any user including anon users, but only allow admins to update, create, delete. we need a custom permission for this because rest_framework only allows IsAuthenticatedOrReadOnly which means any authenticated user can perform CRUD, but recall we only want admins to perform CRUD, any other user can only retrieve or list. So we need to create a custom permission for example "IsAdminOrReadOnly". in store app see permissions.py. We apply it to a view set as usual using permission_classes = [IsAdminOrReadOnly]. See ProductViewSet

@@ -19,6 +19,10 @@ from rest_framework.generics import ListCreateAPIView, RetrieveUpdateDestroyAPIV
 from rest_framework.response import Response
 from rest_framework import status
 from rest_framework.decorators import action
+from rest_framework.permissions import IsAuthenticated, AllowAny, IsAdminUser
+from rest_framework import permissions
+
+from .permissions import IsAdminOrReadOnly
 
 from .pagination import DefaultPagePagination
 from .models import Cart, CartItem, Customer, OrderItem, Product, Collection, Review
@@ -56,6 +60,9 @@ class ProductViewSet(ModelViewSet):
     # filterset_fields = ["collection_id"]
     search_fields = ["title", "description", "collection__title"]
     ordering_fields = ["unit_price", "last_update", "collection__pk"]
+    permission_classes = [
+        IsAdminOrReadOnly,
+    ]
 
     # add pagination (this is page pagination, we can also have limit and offset pagination, see pagination.py)
     ## 1. create pagination.py in store app and set up Pagination classes as needed that you can cusomize. They will be derived from PageNumberPagination
@@ -96,6 +103,10 @@ class ProductViewSet(ModelViewSet):
 
 
 class CollectionViewSet(ModelViewSet):
+    permission_classes = [
+        IsAdminOrReadOnly,
+    ]
+
     def get_queryset(self):
         return Collection.objects.annotate(product_count=Count("product"))
 
@@ -177,9 +188,20 @@ class CartItemViewSet(ModelViewSet):
         return {"request": self.request, "cart_pk": self.kwargs["cart_pk"]}
 
 
-class CustomerViewSet(
-    CreateModelMixin, RetrieveModelMixin, UpdateModelMixin, GenericViewSet
-):
+# originally we wante to only allow create, update, retrieve from endpoint (Admin UI can list and delete)
+# now lets make this more consistent by allow all methods, but restrict CRUD to admin users only, BUT
+# allow /me to be accessible to authenticated users. that is we mus apply permissions class AdminOrReadOnly
+# to this class but for /me action override with IsAuthenticated
+# class CustomerViewSet(
+#     CreateModelMixin, RetrieveModelMixin, UpdateModelMixin, GenericViewSet
+# ):
+class CustomerViewSet(ModelViewSet):
+    # Permissions: !!!NOTE!!! this is defined as a list where we can put multiple permission classes. If any of them fail
+    # the client will not be able to access this view
+    # IsAdminUser is used here instead of IsAdminOrReadOnly because we dont want ANY METHOD at all to be accessible unless
+    # you are authenticated AND an admin user.
+    # permission_classes = [IsAdminUser]
+
     def get_queryset(self):
         return Customer.objects.select_related("user").all()
 
@@ -189,8 +211,28 @@ class CustomerViewSet(
     def get_serializer_context(self):
         return {"request": self.request}
 
+    # lets say we have a very custom business rule that requires different permission for
+    # create (CreateModelMixin) and retrieve (RetrieveModelMixin) and update (UpdatedModelMixin). We then have to override
+    # "get_permission" method. For example a user can retrieve without authentication but must be authenticated to update.
+    # def get_permissions(self):
+    #     if self.request.method in permissions.SAFE_METHODS:
+    #         # !!!NOTE!!! returning a list of permission objects eg "AllowAny()"" with parens,
+    #         # unlike "permission_classes" where we just specify the class
+    #         return [AllowAny()]
+    #     return [IsAuthenticated()]
+
+    # business logic has change to allow put and get on /me for authenticated users and any other action requires admin user
+    def get_permissions(self):
+        if self.action == "me":
+            # !!!NOTE!!! returning a list of permission objects eg "AllowAny()"" with parens,
+            # unlike "permission_classes" where we just specify the class
+            return [IsAuthenticated()]
+        return [IsAdminUser()]
+
     # detail=False means this action is accessible from list view i.e. localhost:8000/store/customer/me
     # detail=True means this action is accessible from detail view i.e. localhost:8000/store/customer/1/me
+
+    # @action(detail=False, methods=["GET", "PUT"], permission_classes=[IsAuthenticated])  # can also overrid permission per action
     @action(detail=False, methods=["GET", "PUT"])
     def me(self, request):
         # every request has an attribute user if user is logged in, other whise it is set to AnonymousUser class
