@@ -168,3 +168,11 @@ re_path(r"^static/(?P<path>.*)$", serve, {"document_root": settings.STATIC_ROOT}
     - set up SIMPLE_JWT in settings.py
   - in urls.py in main app register djoser url patterns 
   - check it out. http://localhost:8000/auth/users/ , will get a 401 as we need now to pass tokens to be authorized
+  - Note that this enpoint has provision for POST which would allow users to register.  But it only captures username, email, passoword. We can customize this by customizing djosers serailizer that is responsible for the data that this enpoint is expecting which are username, email, password.  We want to customize it to recieve also first_name and last_name. Search the djoser docs for serializers and on that page a little ways down you will see a dict of all the serializers djoser uses.
+    - the serailizer we want to replace is the djoser CreateUser Serializer, and we can do this via settings and map it from there to our own custom serializer which we can place in the core app. See serializers.py in the core app
+    - Now in settings.py create setting DJOSER dict and give it our CustomCreateUserSerializer class
+  - the login enpoint /auth/jwt/create
+    - it provies a post endpoint that takes a username and password and returns an access token (5min), and refresh token (1 day). These expiry times can be customized in settings.py via SIMPLE_JWT. Check out https://django-rest-framework-simplejwt.readthedocs.io/en/latest/settings.html
+  - custom actions beyond create, update, save, destroy etc.
+    - we want to create a custom action called me which can be accessed by current logged in user to fetch his profile / customer info
+      - this is possible by creating a custom method on the CustomerViewSet and decorating it as an action. "action" is imported from rest_framework.decorators

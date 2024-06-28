@@ -8,6 +8,7 @@ router = routers.DefaultRouter()
 router.register("products", viewset=views.ProductViewSet, basename="proudcts")
 router.register("collections", viewset=views.CollectionViewSet, basename="collections")
 router.register("carts", viewset=views.CartViewSet, basename="carts")
+router.register("customers", viewset=views.CustomerViewSet, basename="customers")
 
 # lookup is the prefix for the route parmeter we will be looking for eg. product_pk
 # eg. https://localhost/products/product_pk/reviews/1

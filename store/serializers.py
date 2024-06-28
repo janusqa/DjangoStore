@@ -1,6 +1,6 @@
 from decimal import Decimal
 from rest_framework import serializers
-from .models import Cart, CartItem, Product, Collection, Review
+from .models import Cart, CartItem, Customer, Product, Collection, Review
 
 
 # !!!NOTE!!! There is a more efficent way of serializing a model. That is to use
@@ -180,7 +180,21 @@ class CartModelSerializer(serializers.ModelSerializer):
         )
 
 
-###
+class CustomerModelSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Customer
+        fields = [
+            "pk",
+            "user",
+            "phone",
+            "birth_date",
+            "membership",
+        ]
+
+    user = serializers.PrimaryKeyRelatedField(read_only=True)
+
+
+### =================================
 ### !!!NOTE!!! Every thing below this line is a build up to the model serializers above which replace them
 ###
 ### Serializers

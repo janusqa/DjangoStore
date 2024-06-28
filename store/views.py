@@ -12,19 +12,22 @@ from rest_framework.mixins import (
     CreateModelMixin,
     RetrieveModelMixin,
     DestroyModelMixin,
+    UpdateModelMixin,
 )
 from rest_framework.viewsets import ModelViewSet, GenericViewSet
 from rest_framework.generics import ListCreateAPIView, RetrieveUpdateDestroyAPIView
 from rest_framework.response import Response
 from rest_framework import status
+from rest_framework.decorators import action
 
-from .pagination import DefaultPagePagination, DefaultOffsetPagination
-from .models import Cart, CartItem, OrderItem, Product, Collection, Review
+from .pagination import DefaultPagePagination
+from .models import Cart, CartItem, Customer, OrderItem, Product, Collection, Review
 from .serializers import (
     AddCartItemModelSerializer,
     CartItemModelSerializer,
     CartModelSerializer,
     CollectionModelSerializer,
+    CustomerModelSerializer,
     ProductModelSerializer,
     ReviewModelSerializer,
     UpdateCartItemModelSerializer,
@@ -174,7 +177,37 @@ class CartItemViewSet(ModelViewSet):
         return {"request": self.request, "cart_pk": self.kwargs["cart_pk"]}
 
 
-###
+class CustomerViewSet(
+    CreateModelMixin, RetrieveModelMixin, UpdateModelMixin, GenericViewSet
+):
+    def get_queryset(self):
+        return Customer.objects.select_related("user").all()
+
+    def get_serializer_class(self):
+        return CustomerModelSerializer
+
+    def get_serializer_context(self):
+        return {"request": self.request}
+
+    # detail=False means this action is accessible from list view i.e. localhost:8000/store/customer/me
+    # detail=True means this action is accessible from detail view i.e. localhost:8000/store/customer/1/me
+    @action(detail=False, methods=["GET", "PUT"])
+    def me(self, request):
+        # every request has an attribute user if user is logged in, other whise it is set to AnonymousUser class
+        customer = Customer.objects.filter(user__pk=request.user.pk).first()
+        if request.method == "GET":
+            serializer = CustomerModelSerializer(customer)
+            return Response(serializer.data)
+        elif request.method == "PUT":
+            serializer = CustomerModelSerializer(customer, data=request.data)
+            if serializer.is_valid():
+                serializer.save()
+                return Response(serializer.data, status=status.HTTP_200_OK)
+            else:
+                return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+### =================================
 ### !!!NOTE!!! Every thing below this line is a build up to the generic class viewsets above which replace them
 ###
 ### Generic Class Views
@@ -272,7 +305,7 @@ class CollectionDetailRetrieveUpdateDestroy(RetrieveUpdateDestroyAPIView):
         return Response(status=status.HTTP_404_NOT_FOUND)
 
 
-###
+### =================================
 ### !!!NOTE!!! Every thing below this line is a build up to the generic class views above which replace them
 ###
 ### Class Views
