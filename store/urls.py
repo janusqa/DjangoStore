@@ -9,6 +9,7 @@ router.register("products", viewset=views.ProductViewSet, basename="proudcts")
 router.register("collections", viewset=views.CollectionViewSet, basename="collections")
 router.register("carts", viewset=views.CartViewSet, basename="carts")
 router.register("customers", viewset=views.CustomerViewSet, basename="customers")
+router.register("orders", viewset=views.OrderViewSet, basename="orders")
 
 # lookup is the prefix for the route parmeter we will be looking for eg. product_pk
 # eg. https://localhost/products/product_pk/reviews/1
@@ -22,10 +23,14 @@ products_router.register(
 carts_router = routers.NestedDefaultRouter(router, "carts", lookup="cart")
 carts_router.register("items", viewset=views.CartItemViewSet, basename="cart-items")
 
+# orders_router = routers.NestedDefaultRouter(router, "orders", lookup="order")
+# orders_router.register("items", viewset=views.OrderItemViewSet, basename="order-items")
+
 urlpatterns = [
     path("", include(router.urls)),
     path("", include(products_router.urls)),
     path("", include(carts_router.urls)),
+    # path("", include(orders_router.urls)),
     # path("products/", views.product_list, name="products"),
     # path("products/", views.ProductListCreate.as_view(), name="products"),
     # path("products/<int:pk>/", views.product_detail, name="product_detail"),

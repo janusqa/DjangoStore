@@ -35,13 +35,24 @@ from .permissions import (
 )
 
 from .pagination import DefaultPagePagination
-from .models import Cart, CartItem, Customer, OrderItem, Product, Collection, Review
+from .models import (
+    Cart,
+    CartItem,
+    Customer,
+    Order,
+    OrderItem,
+    Product,
+    Collection,
+    Review,
+)
 from .serializers import (
     AddCartItemModelSerializer,
     CartItemModelSerializer,
     CartModelSerializer,
     CollectionModelSerializer,
+    CreateOrderModelSerializer,
     CustomerModelSerializer,
+    OrderModelSerializer,
     ProductModelSerializer,
     ReviewModelSerializer,
     UpdateCartItemModelSerializer,
@@ -275,6 +286,51 @@ class CustomerViewSet(ModelViewSet):
                 return Response(serializer.data, status=status.HTTP_200_OK)
             else:
                 return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+# class OrderItemViewSet(ModelViewSet):
+#     def get_queryset(self):
+#         return OrderItem.objects.prefetch_related("product")
+
+#     def get_serializer_class(self):
+#         return OrderItemModelSerializer
+
+#     def get_serializer_context(self):
+#         return {"request": self.request}
+
+
+class OrderViewSet(ModelViewSet):
+    # an object with cart_is being returned since that is what the default CreateModelMixin returns
+    # instead we want to return an Order instance, so we must over ride the create method and customize
+    # it to do this.
+    def create(self, request, *args, **kwargs):
+        serializer = CreateOrderModelSerializer(
+            data=request.data,
+            context={"request": self.request, "user_id": self.request.user.id},
+        )
+        if serializer.is_valid():
+            order = serializer.save()
+            serializer = OrderModelSerializer(order)
+            return Response(serializer.data)
+        else:
+            return Response(status=status.HTTP_400_BAD_REQUEST)
+
+    def get_queryset(self):
+        if self.request.user.is_staff:
+            return Order.objects.all()
+        customer = Customer.objects.filter(user__pk=self.request.user.pk).first()
+        return Order.objects.filter(customer__pk=customer.pk)
+
+    def get_serializer_class(self):
+        if self.request.method == "POST":
+            return CreateOrderModelSerializer
+        return OrderModelSerializer
+
+    def get_serializer_context(self):
+        return {"request": self.request, "user_id": self.request.user.id}
+
+    def get_permissions(self):
+        return [IsAuthenticated()]
 
 
 ### =================================

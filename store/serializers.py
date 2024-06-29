@@ -1,6 +1,16 @@
 from decimal import Decimal
+from django.db import transaction
 from rest_framework import serializers
-from .models import Cart, CartItem, Customer, Product, Collection, Review
+from .models import (
+    Cart,
+    CartItem,
+    Customer,
+    Order,
+    OrderItem,
+    Product,
+    Collection,
+    Review,
+)
 
 
 # !!!NOTE!!! There is a more efficent way of serializing a model. That is to use
@@ -192,6 +202,63 @@ class CustomerModelSerializer(serializers.ModelSerializer):
         ]
 
     user = serializers.PrimaryKeyRelatedField(read_only=True)
+
+
+class OrderItemModelSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = OrderItem
+        fields = ["pk", "product", "unit_price", "quantity"]
+
+    product = SimpleProductModelSerializer()
+
+
+class CreateOrderModelSerializer(serializers.Serializer):
+    # we inherit from regular serializer because what we want to serialzie is not part of the Order Model.
+    # i.e cart_id
+    cart_id = serializers.UUIDField()
+
+    # we have specific requirements for saving an order so override save method so must be implemented by hand
+    def save(self, **kwargs):
+        # make sure to use a transaction so that if any part of updating the db fails we roll back
+        # and nothing is done
+        with transaction.atomic():
+            # 1. Create Order
+            customer = Customer.objects.filter(user__pk=self.context["user_id"]).first()
+            order = Order.objects.create(customer=customer)
+
+            # 2. Get cart
+            # 3. Get items in cart
+            cart_items = CartItem.objects.select_related("product").filter(
+                cart__pk=self.validated_data["cart_id"]
+            )
+
+            # 4. Convert cart Items to Order items
+            order_items = [
+                OrderItem(
+                    order=order,
+                    product=item.product,
+                    unit_price=item.product.unit_price,
+                    quantity=item.quantity,
+                )
+                for item in cart_items
+            ]
+
+            # 5. Save order items to db
+            # bulk insert orderitems
+            OrderItem.objects.bulk_create(order_items)
+
+            # remove Cart and cart items (deleted by cascade)
+            Cart.objects.filter(pk=self.validated_data["cart_id"]).delete()
+
+            return order
+
+
+class OrderModelSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Order
+        fields = ["pk", "customer", "placed_at", "payment_status", "orderitem_set"]
+
+    orderitem_set = OrderItemModelSerializer(many=True, read_only=True)
 
 
 ### =================================
