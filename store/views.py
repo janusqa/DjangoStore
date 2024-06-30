@@ -56,6 +56,7 @@ from .serializers import (
     ProductModelSerializer,
     ReviewModelSerializer,
     UpdateCartItemModelSerializer,
+    UpdateOrderModelSerializer,
 )
 from .filters import ProductFilterSet
 
@@ -300,7 +301,10 @@ class CustomerViewSet(ModelViewSet):
 
 
 class OrderViewSet(ModelViewSet):
-    # an object with cart_is being returned since that is what the default CreateModelMixin returns
+    # Restrict methods that this view can service
+    http_method_names = ["get", "post", "patch", "delete", "head", "options"]
+
+    # an object with cart_id being returned since that is what the default CreateModelMixin returns
     # instead we want to return an Order instance, so we must over ride the create method and customize
     # it to do this.
     def create(self, request, *args, **kwargs):
@@ -313,7 +317,7 @@ class OrderViewSet(ModelViewSet):
             serializer = OrderModelSerializer(order)
             return Response(serializer.data)
         else:
-            return Response(status=status.HTTP_400_BAD_REQUEST)
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
     def get_queryset(self):
         if self.request.user.is_staff:
@@ -324,12 +328,16 @@ class OrderViewSet(ModelViewSet):
     def get_serializer_class(self):
         if self.request.method == "POST":
             return CreateOrderModelSerializer
+        elif self.request.method == "PATCH":
+            return UpdateOrderModelSerializer
         return OrderModelSerializer
 
     def get_serializer_context(self):
         return {"request": self.request, "user_id": self.request.user.id}
 
     def get_permissions(self):
+        if self.request.method in ["PUT", "PATCH", "DELETE"]:
+            return [IsAdminUser()]
         return [IsAuthenticated()]
 
 

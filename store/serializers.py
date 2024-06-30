@@ -141,6 +141,10 @@ class AddCartItemModelSerializer(serializers.ModelSerializer):
     # We need to validate the product_id in the save method to prevent us saving a nonexistant product
     # which will throw an exception
     # !!!NOTE!!! this function is specially named so that it is used automatially by django
+    # this is a field level validator. It has a pattern of validate_<field_name>
+    # When serializer.is_valid is called in a view it will auto invoke any field validators.
+    # if the cart_id is invalid that is does not exist in this case an error is raised, else
+    # return the field being validated.
     def validate_product_id(self, value):
         if not Product.objects.filter(pk=value).exists():
             raise serializers.ValidationError("No product with the given ID was found.")
@@ -217,6 +221,17 @@ class CreateOrderModelSerializer(serializers.Serializer):
     # i.e cart_id
     cart_id = serializers.UUIDField()
 
+    # this is a field level validator. It has a pattern of validate_<field_name>
+    # When serializer.is_valid is called in a view it will auto invoke any field validators.
+    # if the cart_id is invalid that is does not exist in this case an error is raised, else
+    # return the field being validated.
+    def validate_cart_id(self, value):
+        if not Cart.objects.filter(pk=value).exists():
+            raise serializers.ValidationError("No cart with the given Id was found.")
+        if CartItem.objects.filter(cart__pk=value).count() == 0:
+            raise serializers.ValidationError("The cart is empty.")
+        return value
+
     # we have specific requirements for saving an order so override save method so must be implemented by hand
     def save(self, **kwargs):
         # make sure to use a transaction so that if any part of updating the db fails we roll back
@@ -251,6 +266,12 @@ class CreateOrderModelSerializer(serializers.Serializer):
             Cart.objects.filter(pk=self.validated_data["cart_id"]).delete()
 
             return order
+
+
+class UpdateOrderModelSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Order
+        fields = ["payment_status"]
 
 
 class OrderModelSerializer(serializers.ModelSerializer):

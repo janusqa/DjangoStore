@@ -195,3 +195,11 @@ re_path(r"^static/(?P<path>.*)$", serve, {"document_root": settings.STATIC_ROOT}
   - 2. create custom permission class that retuns that returns true for any user who has this permission assigned via admin ui
   - 3. assign this permission to users in Admin UI
   - 4. apply this permission to the ViewSet via permission_classes OR get_permissions method
+
+### Signals
+- Notifications fired at differen times. We can listen for them and do something. See signals.py in store app. We will create a signal that listens for the creation of a user, and respond by creating a customer profile for this newly created user.
+  - pre_save - fired before a model is saved
+  - post_save - fire after a model is saved
+  - pre_delete - fired before a model is deleted
+  - post_delete - fired after a model is deleted
+- To register a receiver in signals.py you should override the ready method in apps.py.  See apps.py in the store App. The ready method is called when the store app is initialized or "ready" there we import signals.py
