@@ -197,9 +197,18 @@ re_path(r"^static/(?P<path>.*)$", serve, {"document_root": settings.STATIC_ROOT}
   - 4. apply this permission to the ViewSet via permission_classes OR get_permissions method
 
 ### Signals
-- Notifications fired at differen times. We can listen for them and do something. See signals.py in store app. We will create a signal that listens for the creation of a user, and respond by creating a customer profile for this newly created user.
+- Notifications fired at different times. We can listen for them and do something. See /signals/handlers.py in store app. We will create a signal that listens for the creation of a user, and respond by creating a customer profile for this newly created user.
   - pre_save - fired before a model is saved
   - post_save - fire after a model is saved
   - pre_delete - fired before a model is deleted
   - post_delete - fired after a model is deleted
-- To register a receiver in signals.py you should override the ready method in apps.py.  See apps.py in the store App. The ready method is called when the store app is initialized or "ready" there we import signals.py
+- To register a handler in signals.py you should override the ready method in apps.py.  See apps.py in the store App. The ready method is called when the store app is initialized or "ready" there we import signals.py
+- CUSTOM SIGNALS
+  - create a folder called signals in app signals will be for
+  - Place your signals.py in there and rename to handlers
+  - add an __init__.py module, and that is where your signals are defined.
+  - A signal is basically an instance of Signal class see /signals/__init.py and see "order_created"
+  - Now fire signal when order is created, which is done usually in serailizers in this case the CreateOrderModelSerializer
+  - !!!NOTE!!! handlers are placed in the app that needs them. That is any app can subscribe to a signal. In this case the core app subscibes to the order_created custom signal.  The store app subscribes to the user post_save signal. post_save is a built in django signal.
+  - !!!NOTE!!! for custom signals we have to explicitly fire them ourselves for instance in a serializer. see CustomeCreateOrderModelSerializer using "order_created.send_robust" or "order_created.send"
+  - Dont forget to load the signal module when app is ready that is in apps.py for the app where the handler is override the ready method.

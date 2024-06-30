@@ -11,6 +11,7 @@ from .models import (
     Collection,
     Review,
 )
+from .signals import order_created
 
 
 # !!!NOTE!!! There is a more efficent way of serializing a model. That is to use
@@ -264,6 +265,11 @@ class CreateOrderModelSerializer(serializers.Serializer):
 
             # remove Cart and cart items (deleted by cascade)
             Cart.objects.filter(pk=self.validated_data["cart_id"]).delete()
+
+            # fire signal. parameters are the class firing the signal and some kwargs.
+            # we can get current class via the self.__class__ keyword, and we will pass
+            # order as a kwargs
+            order_created.send_robust(self.__class__, order=order)
 
             return order
 

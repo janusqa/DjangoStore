@@ -147,7 +147,7 @@ class Order(models.Model):
     placed_at = models.DateTimeField(auto_now_add=True)
 
     def __str__(self) -> str:
-        return f"Order:{self.pk}, Customer: {self.customer.email}"
+        return f"Order:{self.pk}, Customer: {self.customer.user.email}"
 
     class Meta:
         # creates a custom permission to cancel an order
