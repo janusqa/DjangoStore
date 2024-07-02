@@ -43,6 +43,7 @@ from .models import (
     OrderItem,
     Product,
     Collection,
+    ProductImage,
     Review,
 )
 from .serializers import (
@@ -53,6 +54,7 @@ from .serializers import (
     CreateOrderModelSerializer,
     CustomerModelSerializer,
     OrderModelSerializer,
+    ProductImageModelSerializer,
     ProductModelSerializer,
     ReviewModelSerializer,
     UpdateCartItemModelSerializer,
@@ -91,7 +93,11 @@ class ProductViewSet(ModelViewSet):
     pagination_class = DefaultPagePagination
 
     def get_queryset(self):
-        return Product.objects.select_related("collection").all()
+        return (
+            Product.objects.select_related("collection")
+            .prefetch_related("productimage_set")
+            .all()
+        )
 
         ## !!!NOTE!!! Old way of maunally setting up filtering we now use generic filtering above
         # query_set = Product.objects.select_related("collection").all()
@@ -122,6 +128,17 @@ class ProductViewSet(ModelViewSet):
             )
 
         return super().destroy(request, *args, **kwargs)
+
+
+class ProductImageViewSet(ModelViewSet):
+    def get_queryset(self):
+        return ProductImage.objects.filter(product__pk=self.kwargs["product_pk"])
+
+    def get_serializer_class(self):
+        return ProductImageModelSerializer
+
+    def get_serializer_context(self):
+        return {"request": self.request, "product_pk": self.kwargs["product_pk"]}
 
 
 class CollectionViewSet(ModelViewSet):
@@ -287,17 +304,6 @@ class CustomerViewSet(ModelViewSet):
                 return Response(serializer.data, status=status.HTTP_200_OK)
             else:
                 return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-
-
-# class OrderItemViewSet(ModelViewSet):
-#     def get_queryset(self):
-#         return OrderItem.objects.prefetch_related("product")
-
-#     def get_serializer_class(self):
-#         return OrderItemModelSerializer
-
-#     def get_serializer_context(self):
-#         return {"request": self.request}
 
 
 class OrderViewSet(ModelViewSet):

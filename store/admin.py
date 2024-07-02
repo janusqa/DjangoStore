@@ -26,6 +26,16 @@ class InventoryFilter(admin.SimpleListFilter):
             return queryset.filter(inventory__lt=10)
 
 
+class ProductImageInline(admin.TabularInline):
+    model = models.ProductImage
+    readonly_fields = ["thumbnail"]
+
+    def thumbnail(self, instance):
+        if instance.image.name != "":
+            return format_html(f"<image src='{instance.image.url}' class='thumbnail'/>")
+        return ""
+
+
 # the relation between product and tag is a generic one so we use
 # a differt tabularinline called "GenericTabularInline"
 # introduced tight coupling with taggs app. Moved to "core" app
@@ -35,9 +45,16 @@ class InventoryFilter(admin.SimpleListFilter):
 
 
 class ProductAdmin(admin.ModelAdmin):
+    # Loads css from static folder in admin ui
+    class Media:
+        css = {
+            "all": ["store/css/styles.css"],
+        }
+
     # inlines = ["TagInline"] # introduced tight coupling with taggs app. Moved to "core" app
     search_fields = ["title"]
     actions = ["clear_inventory"]
+    inlines = [ProductImageInline]
     ## BEGIN FORM MODIFICATION EXAMPLES
     # fields =['title', 'slug'] # choose fields to show on form
     # exclude= ['promotions'] # choose fields to hid on form

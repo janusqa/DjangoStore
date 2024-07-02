@@ -9,6 +9,7 @@ from .models import (
     OrderItem,
     Product,
     Collection,
+    ProductImage,
     Review,
 )
 from .signals import order_created
@@ -27,6 +28,16 @@ class CollectionModelSerializer(serializers.ModelSerializer):
     product_count = serializers.IntegerField(read_only=True)
 
 
+class ProductImageModelSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = ProductImage
+        fields = ["pk", "image"]
+
+    def create(self, validated_data):
+        product_pk = self.context["product_pk"]
+        return ProductImage.objects.create(product_id=product_pk, **validated_data)
+
+
 class ProductModelSerializer(serializers.ModelSerializer):
     class Meta:
         model = Product
@@ -39,6 +50,7 @@ class ProductModelSerializer(serializers.ModelSerializer):
             "unit_price",
             "price_with_tax",
             "collection",
+            "productimage_set",
             "collection_str",
             "collection_object",
             "collection_str",
@@ -48,6 +60,10 @@ class ProductModelSerializer(serializers.ModelSerializer):
     # when creating an object set fields that should not be part of the object as read_only=True
     price_with_tax = serializers.SerializerMethodField(
         method_name="get_price_with_tax", read_only=True
+    )
+    productimage_set = ProductImageModelSerializer(
+        read_only=True,
+        many=True,
     )
     # by default the collection included above in meta class gives us by primary key
     collection_str = serializers.StringRelatedField(source="collection", read_only=True)

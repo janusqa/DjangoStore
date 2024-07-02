@@ -212,3 +212,23 @@ re_path(r"^static/(?P<path>.*)$", serve, {"document_root": settings.STATIC_ROOT}
   - !!!NOTE!!! handlers are placed in the app that needs them. That is any app can subscribe to a signal. In this case the core app subscibes to the order_created custom signal.  The store app subscribes to the user post_save signal. post_save is a built in django signal.
   - !!!NOTE!!! for custom signals we have to explicitly fire them ourselves for instance in a serializer. see CustomeCreateOrderModelSerializer using "order_created.send_robust" or "order_created.send"
   - Dont forget to load the signal module when app is ready that is in apps.py for the app where the handler is override the ready method.
+
+### custom commands
+- django looks for a folder named "management/commands" in which custom commands you create are located. Run with "python manage.py <custom_command>.py". See seed_db.py.
+
+### Image uploads
+- set up media directory. "media" dir is usally in root. Must be configured in settings.py and urls.py as usual
+- We use ImageField for model field and in that set the uplod dir with is relative to the media folder
+- Since we are using ImageField we should install Pillow. "pip install pillow"
+- Validation 
+  - see validators.py in store app.  This time around we put the validator in a seperate file called validators.py. In this way we will then need to add the validator to a list on the field of the model we wish to validate. See ProductImage model and the ImageField with it's validators field.
+  - We have other built in validators if using for example FileField we can validate extensions. See commented out code in ProductImage model
+  - Note that ImageFiled already contatins a built in extension validator, BUT FileField does not so we would have needed to import the validator provided by django and use that.
+- Add images to the product admin section using inlines that we saw already. Since this is directly related to store we use the admin.py in store to do most of the work and then link it to admin.py in core to handle case where we distriute core with our app. See both admin.py in store and core. We also added some custom css via the Media nested class. See ProductAdmin in the store admin.py. To do that add a css file to static folder, and put it inside the Media nested class.
+
+### CORS
+- install django-cors-headers
+  - pip install django-cors-headers
+  - in settings add to INSTALLED_APPS
+  - Register middleware "corsheaders.middleware.CorsMiddleware" above "django.middleware.common.CommonMiddleware"
+  - add "CORS_ALLOWED_ORIGINS" to  settings.py and specify what should be able to access this api
