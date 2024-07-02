@@ -12,4 +12,5 @@ urlpatterns = [
     path("hello5/", views.say_hello5, name="hello5"),
     path("hello6/", views.say_hello6, name="hello6"),
     path("hello7/", views.say_hello7, name="hello7"),
+    path("hello8/", views.say_hello8, name="hello8"),
 ]

@@ -1,7 +1,9 @@
 from django.shortcuts import render
 from django.http import HttpResponse
 from django.core.exceptions import ObjectDoesNotExist
+from django.core.mail import send_mail, mail_admins, BadHeaderError, EmailMessage
 from django.db.models.aggregates import Count, Max, Min, Avg
+
 
 # @required when you want to use OR in your queries,
 # F required when you want to compare db fields against each other
@@ -10,6 +12,9 @@ from django.db.models.functions import Concat
 from django.db.models import DecimalField
 from django.db import transaction, connection
 from django.contrib.contenttypes.models import ContentType
+
+from templated_mail.mail import BaseEmailMessage
+
 from store.models import Collection, Product, OrderItem, Order, Customer
 from tags.models import Tag, TaggedItem
 
@@ -348,4 +353,33 @@ def say_hello7(request):
         request,
         "playground/hello.html",
         {"name": "JanusQA", "objects": list(query_set)},
+    )
+
+
+def say_hello8(request):
+    try:
+        send_mail("subject", "message", "admin@home.test", ["bob@home.test"])
+        mail_admins(
+            "subject", "message", html_message="message"
+        )  # mailing admins #set up site admins in settings.py using "ADMINS"
+
+        # create a message and attach a file
+        message = EmailMessage(
+            "subject", "message", "admin@home.test", ["john@home.test"]
+        )
+        message.attach_file("playground/static/images/dog.jpg")
+        message.send()
+
+        # create a mail from template
+        message1 = BaseEmailMessage(
+            template_name="playground/email_hello.html",
+            context={"name": "JanusQA"},  # send variables to template
+        )
+        message1.send(["john@home.text"])
+    except BadHeaderError:
+        pass  # return some error to client
+    return render(
+        request,
+        "playground/hello.html",
+        {"name": "JanusQA"},
     )

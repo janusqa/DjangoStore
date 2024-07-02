@@ -232,3 +232,15 @@ re_path(r"^static/(?P<path>.*)$", serve, {"document_root": settings.STATIC_ROOT}
   - in settings add to INSTALLED_APPS
   - Register middleware "corsheaders.middleware.CorsMiddleware" above "django.middleware.common.CommonMiddleware"
   - add "CORS_ALLOWED_ORIGINS" to  settings.py and specify what should be able to access this api
+
+### Emails
+- set up email by configuiring "EMAIL_BACKEND" in settings.py
+- set up "EMAIL_HOST", "EMAIL_PORT", "EMAIL_HOST_USER", "EMAIL_HOST_PASSWORD"  in settings.py
+- imports
+  - from django.core.mail import send_mail, mail_admins, BadHeaderError
+  - see views.py hello8 in playground for example of email sending
+- For mail attachments, BCC, CC etc we have to use EmailMessage Class directly. See hello8 in views.py of playground. Methods like send_mail and mail_admins use it internally
+- to send properly formatted mail use django-templated-mail
+  - pip install django-templated-mail
+  - email templates go into the templates folder
+  - from templated_mail.mail import BaseEmailMessage
