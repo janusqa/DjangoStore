@@ -56,6 +56,13 @@ re_path(r"^static/(?P<path>.*)$", serve, {"document_root": settings.STATIC_ROOT}
     ```
 - now run the command "$ python manage.py collectstatic"
 
+### CORS
+- install django-cors-headers
+  - pip install django-cors-headers
+  - in settings add to INSTALLED_APPS
+  - Register middleware "corsheaders.middleware.CorsMiddleware" above "django.middleware.common.CommonMiddleware"
+  - add "CORS_ALLOWED_ORIGINS" to  settings.py and specify what should be able to access this apis
+
   
 ### CSS
 - opening settings and in the top "import os"
@@ -226,13 +233,6 @@ re_path(r"^static/(?P<path>.*)$", serve, {"document_root": settings.STATIC_ROOT}
   - Note that ImageFiled already contatins a built in extension validator, BUT FileField does not so we would have needed to import the validator provided by django and use that.
 - Add images to the product admin section using inlines that we saw already. Since this is directly related to store we use the admin.py in store to do most of the work and then link it to admin.py in core to handle case where we distriute core with our app. See both admin.py in store and core. We also added some custom css via the Media nested class. See ProductAdmin in the store admin.py. To do that add a css file to static folder, and put it inside the Media nested class.
 
-### CORS
-- install django-cors-headers
-  - pip install django-cors-headers
-  - in settings add to INSTALLED_APPS
-  - Register middleware "corsheaders.middleware.CorsMiddleware" above "django.middleware.common.CommonMiddleware"
-  - add "CORS_ALLOWED_ORIGINS" to  settings.py and specify what should be able to access this api
-
 ### Emails
 - set up email by configuiring "EMAIL_BACKEND" in settings.py
 - set up "EMAIL_HOST", "EMAIL_PORT", "EMAIL_HOST_USER", "EMAIL_HOST_PASSWORD"  in settings.py
@@ -244,3 +244,16 @@ re_path(r"^static/(?P<path>.*)$", serve, {"document_root": settings.STATIC_ROOT}
   - pip install django-templated-mail
   - email templates go into the templates folder
   - from templated_mail.mail import BaseEmailMessage
+
+### Background task via distributed queues / message brokers
+- Instead of Rabbitmq we will use Redis as our message broker coupled with Celery a distributed task queue
+- Install Redis in docker and run it
+- Install Redis dependancy in django
+  - pip install redis
+- Install celery as a dependancy
+  - pip install celery
+- create a celery.py in maing project(project with settings.py)
+- put config info in setting.py prefixed with "CELERY" 
+- import celery.py module into __init__.py of main app so it is loaded on startup.
+- to start a worker
+  - run in terminal "celery -A DjangoStore worker --loglevel=info"

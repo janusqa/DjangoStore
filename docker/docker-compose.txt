@@ -1,0 +1,10 @@
+To start enviroment:
+ $ docker compose -f docker-compose.yaml down -v && docker compose -f docker-compose.yaml up
+ $ docker compose -f docker-compose.yaml down -v && docker compose -f docker-compose.yaml up --build
+
+To stop environment:
+ $ docker compose -f docker-compose.yaml down -v
+
+To view environment variables for the container
+ $ docker-compose run <container-name-as-in-docker-compose-yaml> env
+ eg docker-compose run butapp env

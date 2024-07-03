@@ -1,0 +1,17 @@
+# version: '3.1'
+
+services:
+    redis:
+        image: redis:latest
+        restart: always
+        ports:
+            - 6379:6379
+        # environment:
+        #     ENV_EXAMPLE_VAR_1: ${ENV_EXAMPLE_VAR_1}
+        # volumes:
+        #     - ./volumes/cache:/data
+        networks:
+            - djangostore-dev
+
+networks:
+    djangostore-dev:

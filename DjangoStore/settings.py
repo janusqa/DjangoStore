@@ -182,3 +182,5 @@ EMAIL_HOST_PASSWORD = ""
 DEFAULT_FROM_EMAIL = "admin@home.test"
 
 ADMINS = [("JanusQA", "admin@home.test")]
+
+CELERY_BROKER_URL = "redis://localhost:6379/1"
