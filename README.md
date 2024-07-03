@@ -276,3 +276,8 @@ re_path(r"^static/(?P<path>.*)$", serve, {"document_root": settings.STATIC_ROOT}
   - pip install flower
   - start it up: "celery -A DjangoStore flower"
   - access web ui at localhost:5555
+
+### Automated Testing
+- Use pytest
+  - "pip install pytest"
+  -  "pip install pytest-django" # pytest plugin for django
