@@ -12,6 +12,7 @@ https://docs.djangoproject.com/en/5.0/ref/settings/
 
 from datetime import timedelta
 from pathlib import Path
+from celery.schedules import crontab
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -184,3 +185,19 @@ DEFAULT_FROM_EMAIL = "admin@home.test"
 ADMINS = [("JanusQA", "admin@home.test")]
 
 CELERY_BROKER_URL = "redis://localhost:6379/1"
+CELERY_BEAT_SCHEDULE = {
+    "notify_customers": {
+        "task": "playground.tasks.notify_customers",
+        # 'schedule': 15 * 60, # every 15 mins. ALTERNATIVE
+        # "schedule": crontab(
+        #     min='*/15'
+        # ),  # fine grained control with crontab. Every 15 mins. ALTERNATIVE.
+        # "schedule": crontab(
+        #     day_of_week=1, hour=7, min=30
+        # ),  # fine grained control with crontab. Every monday at 7:30 AM. ALTERNATIVE
+        "schedule": 5,  # every 5s
+        # pass arguments to task via args or kwargs
+        "args": ["Hello World"],
+        # 'kwargs': { }
+    }
+}

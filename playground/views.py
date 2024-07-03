@@ -17,6 +17,7 @@ from templated_mail.mail import BaseEmailMessage
 
 from store.models import Collection, Product, OrderItem, Order, Customer
 from tags.models import Tag, TaggedItem
+from .tasks import notify_customers
 
 
 # Create your views here.
@@ -378,6 +379,18 @@ def say_hello8(request):
         message1.send(["john@home.text"])
     except BadHeaderError:
         pass  # return some error to client
+    return render(
+        request,
+        "playground/hello.html",
+        {"name": "JanusQA"},
+    )
+
+
+def say_hello9(request):
+    # running background or long running task with celery
+    # we do not call the task directly but call it via its "delay" method
+    notify_customers.delay("hello9")
+
     return render(
         request,
         "playground/hello.html",

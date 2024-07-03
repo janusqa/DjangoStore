@@ -257,3 +257,22 @@ re_path(r"^static/(?P<path>.*)$", serve, {"document_root": settings.STATIC_ROOT}
 - import celery.py module into __init__.py of main app so it is loaded on startup.
 - to start a worker
   - run in terminal "celery -A DjangoStore worker --loglevel=info"
+- An example
+  - see tasks.py, hello9 in views.py in playground app
+  - in views.py we import our tasks from tasks.py
+    - from .tasks import notify_customers # for example
+- !!!NOTE!!! if you create a new task you must restart your celery worker!!! Tasks like notify_custome if created after celery work has started will not be picked up by it.
+  
+### Celery BEAT as a task scheduler (can also be cron replacement)
+- Beat acts as a scheduler or orchestrator
+- in settings.py configure the BEAT via "CELERY_BEAT_SCHEDULE" 
+  - for finer grain control over schedules use crontab object
+  - from celery.schedules import crontab 
+- To start the "worker" is differnt
+  - "celery -A DjangoStore beat"
+
+### MONITOR CELERY TASK
+- use Flower to monitor celery tasks
+  - pip install flower
+  - start it up: "celery -A DjangoStore flower"
+  - access web ui at localhost:5555
