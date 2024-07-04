@@ -281,3 +281,18 @@ re_path(r"^static/(?P<path>.*)$", serve, {"document_root": settings.STATIC_ROOT}
 - Use pytest
   - "pip install pytest"
   -  "pip install pytest-django" # pytest plugin for django
+  -  In real root folder configure pytest with pytest.ini
+- In your app you want to test create a folder called "tests"
+  - create your test modules. Each module should be prefixed with "test_". See "tests/test_collections.py" in store app.
+    - eg. if you want to test collections endpoint create "test_collections.py"
+  - your testing methods in test modules should begin with "test_"
+    - eg. "def test_if_user_is_anonymous_returns_401()
+  - group related test together in a class. The class name should start with "Test"
+  - to run test in terminal run "pytest" to run all test
+  - run test in particular directory "pytest store/tests/"
+  - run test in particular module "pytest store/tests/test_collections.py"
+  - run test in particular class "pytest store/tests/test_collections.py::TestCreateCollection"
+  - run test in particular method of class "pytest store/tests/test_collections.py::TestCreateCollection::test_<name_of_test>"
+  - run test on the pattern of a name like regex. "pytest -k anonymous" runs all test with anonymous in their name
+  - temporiraly skip a test 
+    - on the method or class you want t skip decorate it with "@pytest.mark.skip"
