@@ -1,9 +1,14 @@
+import requests
 from django.shortcuts import render
 from django.http import HttpResponse
 from django.core.exceptions import ObjectDoesNotExist
 from django.core.mail import send_mail, mail_admins, BadHeaderError, EmailMessage
 from django.db.models.aggregates import Count, Max, Min, Avg
 
+from django.core.cache import cache
+from django.views.decorators.cache import cache_page
+from django.utils.decorators import method_decorator
+from rest_framework.views import APIView
 
 # @required when you want to use OR in your queries,
 # F required when you want to compare db fields against each other
@@ -396,3 +401,48 @@ def say_hello9(request):
         "playground/hello.html",
         {"name": "JanusQA"},
     )
+
+
+def say_hello10(request):
+    # tedious way of caching data. Need to create a key then call the cache api
+    cache_key = "httpbin_result"
+    if cache.get(cache_key) is None:
+        response = requests.get("https://httpbin.org/delay/2")
+        data = response.json()
+        cache.set(
+            cache_key, data, timeout=10 * 60
+        )  # cache for one min. If timeout left off, then default is 5 mins or 300s, this can also be set globally in CACHES in settings.py
+    return render(
+        request,
+        "playground/hello.html",
+        {"name": cache.get(cache_key)},
+    )
+
+
+@cache_page(timeout=5 * 60)  # cache for 5 mins
+def say_hello11(request):
+    # cache_page now handles what we did manually in hello10 automagically for us
+    # it creates a key and stores data, and checks if key exists and retireves it from cache for us
+    response = requests.get("https://httpbin.org/delay/2")
+    data = response.json()
+
+    return render(
+        request,
+        "playground/hello.html",
+        {"name": data},
+    )
+
+
+class HelloViewSet(APIView):
+    @method_decorator(cache_page(timeout=5 * 60))  # cache for 5 mins
+    def get(self, request):
+        # cache_page now handles what we did manually in hello10 automagically for us
+        # it creates a key and stores data, and checks if key exists and retireves it from cache for us
+        response = requests.get("https://httpbin.org/delay/2")
+        data = response.json()
+
+        return render(
+            request,
+            "playground/hello.html",
+            {"name": data},
+        )

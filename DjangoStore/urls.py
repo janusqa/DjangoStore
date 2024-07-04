@@ -25,8 +25,9 @@ import debug_toolbar
 admin.site.site_header = "DjangoStore Admin"
 admin.site.index_title = "Admin"
 
+DEBUG = True
+
 urlpatterns = [
-    path("__debug__/", include(debug_toolbar.urls)),
     re_path(r"^media/(?P<path>.*)$", serve, {"document_root": settings.MEDIA_ROOT}),
     re_path(r"^static/(?P<path>.*)$", serve, {"document_root": settings.STATIC_ROOT}),
     re_path(r"^auth/", include("djoser.urls")),
@@ -35,3 +36,10 @@ urlpatterns = [
     path("playground/", include("playground.urls")),
     path("store/", include("store.urls")),
 ]
+
+if DEBUG:
+    urlpatterns = (
+        [path("__debug__/", include(debug_toolbar.urls))]
+        + [path("silk/", include("silk.urls", namespace="silk"))]
+        + urlpatterns
+    )

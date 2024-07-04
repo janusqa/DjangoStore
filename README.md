@@ -296,3 +296,38 @@ re_path(r"^static/(?P<path>.*)$", serve, {"document_root": settings.STATIC_ROOT}
   - run test on the pattern of a name like regex. "pytest -k anonymous" runs all test with anonymous in their name
   - temporiraly skip a test 
     - on the method or class you want t skip decorate it with "@pytest.mark.skip"
+
+### Performance testing - locust
+- pip install locust
+- setup
+  - create folder in main project DjangoStore called "locustfiles"
+  - see "locustfiles/browseproducts" in main project
+    - methods decorated with @task are the test. Regular methods like on_start are lifecycle hooks / helper methods
+- run a test: "locust -f DjangoStore/locustfiles/browse_products.py"
+  - open the web interface usually at "localhost:8089"
+    - spcify number of users, spawn rate, and host of your running app "http://localhost:8000"
+
+### Performace testing - django-silk (find slow or inefficient queries)
+- pip install django-silk
+  - register in settings.py
+    - in MIDDLEWARE [..., 'silk.middleware.SilkyMiddleware', ...]
+    - in INSTALLED_APPS = [..., 'silk', ...]
+  - register pat in urlpatterns=[..., path('silk/', include('silk.urls', namespace='silk')), ...]
+  - run migrations 
+
+### Performance testing
+- Remember to disable middlewares paths ect for these testing 
+  - disable debug tool bar and its middleware and path
+  - disable locust
+  - disable silk, and its middleware and path
+
+### REDIS caching
+- pip install django-redis
+- configure "CACHES" in settings
+- "from django.core.cache import cache" see playground/views.py hello10
+- How to cache an entire view
+  - use decorators (see playground/hello11)
+  - from django.views.decorators.cache import cache_page
+  - for class based views
+    - from django.utils.decorators import method_decorator
+    - wrap cache_page with method_decorator. see HelloViewSet
