@@ -14,7 +14,7 @@ ALLOWED_HOSTS = []  # production url (minus protocol and any slashes) goes in th
 # https://docs.djangoproject.com/en/5.0/ref/settings/#databases
 
 DATABASES = {
-    "default": dj_database_url.config(),
+    "default": dj_database_url.config(),  # looks for an env variabled named DATABASE_URL which you would have set up on prod to hold the connection string
 }
 
 REDIS_URL = os.environ["REDIS_URL"]
