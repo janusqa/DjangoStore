@@ -351,3 +351,11 @@ re_path(r"^static/(?P<path>.*)$", serve, {"document_root": settings.STATIC_ROOT}
 - configure gunicorn
   - pip install gunicorn
   - start gunicorn "gunicorn DjangoStore.wsgi"
+- pip install dj_database_url (see settings/prod.py)
+  
+### Deploy to production
+- on your production server set DJANGO_SETTINGS_MOUDEL equals to "DjangoStore.settings.prod"
+- in the commands for starting your app there should be at least two commands
+  - one to run migrations
+  - one to run gunicorn
+  - one to start a work process to run celery
