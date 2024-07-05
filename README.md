@@ -342,4 +342,12 @@ re_path(r"^static/(?P<path>.*)$", serve, {"document_root": settings.STATIC_ROOT}
 - LOGGING: see "LOGGING" in settings.py
   - import logging
   - see playground/hello13
-  - 
+- DEV vs Prod settings
+  - create a folder called "settings" in main project
+  - move settings.py in to "settings" folder and rename to "common.py"
+  - create a dev.py and prod.py in settings folder and place respective settings in each
+  - search entire project for "DJANGO_SETTINGS_MODULE" and change "DjangoStore.settings" to "DjangoStore.settings.dev"
+  - in production we would set "DJANGO_SETTINGS_MODULE" to "DjangoStore.settings.prod"
+- configure gunicorn
+  - pip install gunicorn
+  - start gunicorn "gunicorn DjangoStore.wsgi"
