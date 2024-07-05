@@ -1,0 +1,15 @@
+{% extends 'layout.html' %}
+
+{% load static %}
+
+{% block extra_styles %}
+<link rel="stylesheet" href="{% static 'core/css/styles.css' %}" />
+{% endblock extra_styles %}
+
+{% block title %}Home Page{% endblock title %}
+
+{% block content %}
+<div class="home-page">
+    <img src="{% static 'core/logo.svg' %}" alt="Logo" class="logo">
+</div>
+{% endblock content %}

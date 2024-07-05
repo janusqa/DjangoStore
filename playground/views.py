@@ -10,6 +10,8 @@ from django.views.decorators.cache import cache_page
 from django.utils.decorators import method_decorator
 from rest_framework.views import APIView
 
+import logging
+
 # @required when you want to use OR in your queries,
 # F required when you want to compare db fields against each other
 from django.db.models import Q, F, Value, Func, ExpressionWrapper
@@ -373,7 +375,7 @@ def say_hello8(request):
         message = EmailMessage(
             "subject", "message", "admin@home.test", ["john@home.test"]
         )
-        message.attach_file("playground/static/images/dog.jpg")
+        message.attach_file("static/playground/images/dog.jpg")
         message.send()
 
         # create a mail from template
@@ -425,6 +427,26 @@ def say_hello11(request):
     # it creates a key and stores data, and checks if key exists and retireves it from cache for us
     response = requests.get("https://httpbin.org/delay/2")
     data = response.json()
+
+    return render(
+        request,
+        "playground/hello.html",
+        {"name": data},
+    )
+
+
+logger = logging.getLogger(__name__)
+
+
+def say_hello13(request):
+    # logging
+    try:
+        logger.info("Calling httpbin")
+        response = requests.get("https://httpbin.org/delay/2")
+        logger.info("Received response from httpbin")
+        data = response.json()
+    except request.ConnectionError:
+        logger.critical("httpbin is offline")
 
     return render(
         request,

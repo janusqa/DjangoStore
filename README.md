@@ -331,3 +331,15 @@ re_path(r"^static/(?P<path>.*)$", serve, {"document_root": settings.STATIC_ROOT}
   - for class based views
     - from django.utils.decorators import method_decorator
     - wrap cache_page with method_decorator. see HelloViewSet
+  
+### prepare for production
+- python mange.py collectstatic # collects all static/media files and puts them in one location
+- in our example this location is "assets/".  Add it to .gitignore as we dont want to put this in our repo
+- django does not support serving static files in prod.  We must use a library called whitenoise
+  - pip install whitenoise
+  - add whitenose in settings.py to MIDDLEWARE
+  - now we can serve static assets in production
+- LOGGING: see "LOGGING" in settings.py
+  - import logging
+  - see playground/hello13
+  - 
